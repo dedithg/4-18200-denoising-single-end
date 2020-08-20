@@ -1,0 +1,281 @@
+sampleid	animal_id	zt_time	sex	sex_name	diet_num	diet_group	week_name	week_num	group	diet
+#q2:types	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical
+1x1x0	1	0	M	Male	1	MLF	Baseline	0	clf	lf
+1x1x4	1	4	M	Male	1	MLF	Baseline	0	clf	lf
+1x1x8	1	8	M	Male	1	MLF	Baseline	0	clf	lf
+1x1x12	1	12	M	Male	1	MLF	Baseline	0	clf	lf
+1x1x16	1	16	M	Male	1	MLF	Baseline	0	clf	lf
+1x1x20	1	20	M	Male	1	MLF	Baseline	0	clf	lf
+2x1x0	2	0	F	Female	1	MLF	Baseline	0	clf	lf
+2x1x8	2	8	F	Female	1	MLF	Baseline	0	clf	lf
+2x1x12	2	12	F	Female	1	MLF	Baseline	0	clf	lf
+2x1x16	2	16	F	Female	1	MLF	Baseline	0	clf	lf
+2x1x20	2	20	F	Female	1	MLF	Baseline	0	clf	lf
+5x1x0	5	0	M	Male	1	MLF	Baseline	0	clf	lf
+5x1x4	5	4	M	Male	1	MLF	Baseline	0	clf	lf
+5x1x8	5	8	M	Male	1	MLF	Baseline	0	clf	lf
+5x1x12	5	12	M	Male	1	MLF	Baseline	0	clf	lf
+5x1x16	5	16	M	Male	1	MLF	Baseline	0	clf	lf
+5x1x20	5	20	M	Male	1	MLF	Baseline	0	clf	lf
+6x1x0	6	0	F	Female	1	MLF	Baseline	0	clf	lf
+6x1x4	6	4	F	Female	1	MLF	Baseline	0	clf	lf
+6x1x8	6	8	F	Female	1	MLF	Baseline	0	clf	lf
+6x1x12	6	12	F	Female	1	MLF	Baseline	0	clf	lf
+6x1x16	6	16	F	Female	1	MLF	Baseline	0	clf	lf
+6x1x20	6	20	F	Female	1	MLF	Baseline	0	clf	lf
+9x1x0	9	0	F	Female	2	MHF	Baseline	0	chf	hf
+9x1x4	9	4	F	Female	2	MHF	Baseline	0	chf	hf
+9x1x8	9	8	F	Female	2	MHF	Baseline	0	chf	hf
+9x1x12	9	12	F	Female	2	MHF	Baseline	0	chf	hf
+9x1x16	9	16	F	Female	2	MHF	Baseline	0	chf	hf
+9x1x20	9	20	F	Female	2	MHF	Baseline	0	chf	hf
+10x1x0	10	0	M	Male	2	MHF	Baseline	0	chf	hf
+10x1x4	10	4	M	Male	2	MHF	Baseline	0	chf	hf
+10x1x8	10	8	M	Male	2	MHF	Baseline	0	chf	hf
+10x1x12	10	12	M	Male	2	MHF	Baseline	0	chf	hf
+10x1x16	10	16	M	Male	2	MHF	Baseline	0	chf	hf
+10x1x20	10	20	M	Male	2	MHF	Baseline	0	chf	hf
+13x1x0	13	0	F	Female	2	MHF	Baseline	0	chf	hf
+13x1x4	13	4	F	Female	2	MHF	Baseline	0	chf	hf
+13x1x8	13	8	F	Female	2	MHF	Baseline	0	chf	hf
+13x1x12	13	12	F	Female	2	MHF	Baseline	0	chf	hf
+13x1x16	13	16	F	Female	2	MHF	Baseline	0	chf	hf
+13x1x20	13	20	F	Female	2	MHF	Baseline	0	chf	hf
+14x1x0	14	0	M	Male	2	MHF	Baseline	0	chf	hf
+14x1x4	14	4	M	Male	2	MHF	Baseline	0	chf	hf
+14x1x8	14	8	M	Male	2	MHF	Baseline	0	chf	hf
+14x1x12	14	12	M	Male	2	MHF	Baseline	0	chf	hf
+14x1x16	14	16	M	Male	2	MHF	Baseline	0	chf	hf
+14x1x20	14	20	M	Male	2	MHF	Baseline	0	chf	hf
+17x1x0	17	0	M	Male	3	LHF	Baseline	0	elf	lf_hf
+17x1x4	17	4	M	Male	3	LHF	Baseline	0	elf	lf_hf
+17x1x8	17	8	M	Male	3	LHF	Baseline	0	elf	lf_hf
+17x1x12	17	12	M	Male	3	LHF	Baseline	0	elf	lf_hf
+17x1x16	17	16	M	Male	3	LHF	Baseline	0	elf	lf_hf
+17x1x20	17	20	M	Male	3	LHF	Baseline	0	elf	lf_hf
+18x1x0	18	0	F	Female	3	LHF	Baseline	0	elf	lf_hf
+18x1x4	18	4	F	Female	3	LHF	Baseline	0	elf	lf_hf
+18x1x8	18	8	F	Female	3	LHF	Baseline	0	elf	lf_hf
+18x1x12	18	12	F	Female	3	LHF	Baseline	0	elf	lf_hf
+18x1x16	18	16	F	Female	3	LHF	Baseline	0	elf	lf_hf
+18x1x20	18	20	F	Female	3	LHF	Baseline	0	elf	lf_hf
+21x1x0	21	0	M	Male	3	LHF	Baseline	0	elf	lf_hf
+21x1x4	21	4	M	Male	3	LHF	Baseline	0	elf	lf_hf
+21x1x8	21	8	M	Male	3	LHF	Baseline	0	elf	lf_hf
+21x1x12	21	12	M	Male	3	LHF	Baseline	0	elf	lf_hf
+21x1x16	21	16	M	Male	3	LHF	Baseline	0	elf	lf_hf
+21x1x20	21	20	M	Male	3	LHF	Baseline	0	elf	lf_hf
+22x1x0	22	0	F	Female	3	LHF	Baseline	0	elf	lf_hf
+22x1x4	22	4	F	Female	3	LHF	Baseline	0	elf	lf_hf
+22x1x8	22	8	F	Female	3	LHF	Baseline	0	elf	lf_hf
+22x1x12	22	12	F	Female	3	LHF	Baseline	0	elf	lf_hf
+22x1x16	22	16	F	Female	3	LHF	Baseline	0	elf	lf_hf
+22x1x20	22	20	F	Female	3	LHF	Baseline	0	elf	lf_hf
+25x1x0	25	0	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+25x1x4	25	4	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+25x1x8	25	8	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+25x1x12	25	12	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+25x1x16	25	16	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+25x1x20	25	20	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+26x1x0	26	0	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+26x1x4	26	4	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+26x1x8	26	8	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+26x1x12	26	12	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+26x1x16	26	16	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+26x1x20	26	20	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+29x1x0	29	0	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+29x1x4	29	4	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+29x1x8	29	8	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+29x1x12	29	12	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+29x1x16	29	16	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+29x1x20	29	20	F	Female	4	EHF	Baseline	0	ehf	hf_lf
+30x1x0	30	0	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+30x1x4	30	4	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+30x1x8	30	8	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+30x1x12	30	12	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+30x1x16	30	16	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+30x1x20	30	20	M	Male	4	EHF	Baseline	0	ehf	hf_lf
+1x3x0	1	0	M	Male	1	MLF	Week 13	1	clf	lf
+1x3x4	1	4	M	Male	1	MLF	Week 13	1	clf	lf
+1x3x8	1	8	M	Male	1	MLF	Week 13	1	clf	lf
+1x3x12	1	12	M	Male	1	MLF	Week 13	1	clf	lf
+1x3x16	1	16	M	Male	1	MLF	Week 13	1	clf	lf
+1x3x20	1	20	M	Male	1	MLF	Week 13	1	clf	lf
+2x3x0	2	0	F	Female	1	MLF	Week 13	1	clf	lf
+2x3x4	2	4	F	Female	1	MLF	Week 13	1	clf	lf
+2x3x8	2	8	F	Female	1	MLF	Week 13	1	clf	lf
+2x3x12	2	12	F	Female	1	MLF	Week 13	1	clf	lf
+2x3x16	2	16	F	Female	1	MLF	Week 13	1	clf	lf
+2x3x20	2	20	F	Female	1	MLF	Week 13	1	clf	lf
+3x3x0	3	0	M	Male	1	MLF	Week 13	1	clf	lf
+3x3x4	3	4	M	Male	1	MLF	Week 13	1	clf	lf
+3x3x8	3	8	M	Male	1	MLF	Week 13	1	clf	lf
+3x3x12	3	12	M	Male	1	MLF	Week 13	1	clf	lf
+3x3x16	3	16	M	Male	1	MLF	Week 13	1	clf	lf
+3x3x20	3	20	M	Male	1	MLF	Week 13	1	clf	lf
+4x3x0	4	0	F	Female	1	MLF	Week 13	1	clf	lf
+4x3x4	4	4	F	Female	1	MLF	Week 13	1	clf	lf
+4x3x8	4	8	F	Female	1	MLF	Week 13	1	clf	lf
+4x3x12	4	12	F	Female	1	MLF	Week 13	1	clf	lf
+4x3x16	4	16	F	Female	1	MLF	Week 13	1	clf	lf
+4x3x20	4	20	F	Female	1	MLF	Week 13	1	clf	lf
+5x3x0	5	0	M	Male	1	MLF	Week 13	1	clf	lf
+5x3x4	5	4	M	Male	1	MLF	Week 13	1	clf	lf
+5x3x8	5	8	M	Male	1	MLF	Week 13	1	clf	lf
+5x3x12	5	12	M	Male	1	MLF	Week 13	1	clf	lf
+5x3x16	5	16	M	Male	1	MLF	Week 13	1	clf	lf
+5x3x20	5	20	M	Male	1	MLF	Week 13	1	clf	lf
+6x3x0	6	0	F	Female	1	MLF	Week 13	1	clf	lf
+6x3x4	6	4	F	Female	1	MLF	Week 13	1	clf	lf
+6x3x8	6	8	F	Female	1	MLF	Week 13	1	clf	lf
+6x3x12	6	12	F	Female	1	MLF	Week 13	1	clf	lf
+6x3x16	6	16	F	Female	1	MLF	Week 13	1	clf	lf
+6x3x20	6	20	F	Female	1	MLF	Week 13	1	clf	lf
+7x3x0	7	0	M	Male	1	MLF	Week 13	1	clf	lf
+7x3x4	7	4	M	Male	1	MLF	Week 13	1	clf	lf
+7x3x8	7	8	M	Male	1	MLF	Week 13	1	clf	lf
+7x3x12	7	12	M	Male	1	MLF	Week 13	1	clf	lf
+7x3x16	7	16	M	Male	1	MLF	Week 13	1	clf	lf
+7x3x20	7	20	M	Male	1	MLF	Week 13	1	clf	lf
+8x3x0	8	0	F	Female	1	MLF	Week 13	1	clf	lf
+8x3x4	8	4	F	Female	1	MLF	Week 13	1	clf	lf
+8x3x8	8	8	F	Female	1	MLF	Week 13	1	clf	lf
+8x3x12	8	12	F	Female	1	MLF	Week 13	1	clf	lf
+8x3x16	8	16	F	Female	1	MLF	Week 13	1	clf	lf
+8x3x20	8	20	F	Female	1	MLF	Week 13	1	clf	lf
+9x3x0	9	0	F	Female	2	MHF	Week 13	1	chf	hf
+9x3x4	9	4	F	Female	2	MHF	Week 13	1	chf	hf
+9x3x8	9	8	F	Female	2	MHF	Week 13	1	chf	hf
+9x3x12	9	12	F	Female	2	MHF	Week 13	1	chf	hf
+9x3x16	9	16	F	Female	2	MHF	Week 13	1	chf	hf
+9x3x20	9	20	F	Female	2	MHF	Week 13	1	chf	hf
+10x3x0	10	0	M	Male	2	MHF	Week 13	1	chf	hf
+10x3x4	10	4	M	Male	2	MHF	Week 13	1	chf	hf
+10x3x8	10	8	M	Male	2	MHF	Week 13	1	chf	hf
+10x3x12	10	12	M	Male	2	MHF	Week 13	1	chf	hf
+10x3x16	10	16	M	Male	2	MHF	Week 13	1	chf	hf
+10x3x20	10	20	M	Male	2	MHF	Week 13	1	chf	hf
+11x3x0	11	0	F	Female	2	MHF	Week 13	1	chf	hf
+11x3x4	11	4	F	Female	2	MHF	Week 13	1	chf	hf
+11x3x8	11	8	F	Female	2	MHF	Week 13	1	chf	hf
+11x3x12	11	12	F	Female	2	MHF	Week 13	1	chf	hf
+11x3x16	11	16	F	Female	2	MHF	Week 13	1	chf	hf
+11x3x20	11	20	F	Female	2	MHF	Week 13	1	chf	hf
+12x3x0	12	0	M	Male	2	MHF	Week 13	1	chf	hf
+12x3x4	12	4	M	Male	2	MHF	Week 13	1	chf	hf
+12x3x8	12	8	M	Male	2	MHF	Week 13	1	chf	hf
+12x3x12	12	12	M	Male	2	MHF	Week 13	1	chf	hf
+12x3x16	12	16	M	Male	2	MHF	Week 13	1	chf	hf
+12x3x20	12	20	M	Male	2	MHF	Week 13	1	chf	hf
+13x3x0	13	0	F	Female	2	MHF	Week 13	1	chf	hf
+13x3x4	13	4	F	Female	2	MHF	Week 13	1	chf	hf
+13x3x8	13	8	F	Female	2	MHF	Week 13	1	chf	hf
+13x3x12	13	12	F	Female	2	MHF	Week 13	1	chf	hf
+13x3x16	13	16	F	Female	2	MHF	Week 13	1	chf	hf
+13x3x20	13	20	F	Female	2	MHF	Week 13	1	chf	hf
+14x3x0	14	0	M	Male	2	MHF	Week 13	1	chf	hf
+14x3x4	14	4	M	Male	2	MHF	Week 13	1	chf	hf
+14x3x8	14	8	M	Male	2	MHF	Week 13	1	chf	hf
+14x3x12	14	12	M	Male	2	MHF	Week 13	1	chf	hf
+14x3x16	14	16	M	Male	2	MHF	Week 13	1	chf	hf
+14x3x20	14	20	M	Male	2	MHF	Week 13	1	chf	hf
+16x3x0	16	0	M	Male	2	MHF	Week 13	1	chf	hf
+16x3x8	16	8	M	Male	2	MHF	Week 13	1	chf	hf
+16x3x12	16	12	M	Male	2	MHF	Week 13	1	chf	hf
+16x3x16	16	16	M	Male	2	MHF	Week 13	1	chf	hf
+16x3x20	16	20	M	Male	2	MHF	Week 13	1	chf	hf
+17x3x0	17	0	M	Male	3	LHF	Week 13	1	elf	lf_hf
+17x3x4	17	4	M	Male	3	LHF	Week 13	1	elf	lf_hf
+17x3x8	17	8	M	Male	3	LHF	Week 13	1	elf	lf_hf
+17x3x12	17	12	M	Male	3	LHF	Week 13	1	elf	lf_hf
+17x3x16	17	16	M	Male	3	LHF	Week 13	1	elf	lf_hf
+17x3x20	17	20	M	Male	3	LHF	Week 13	1	elf	lf_hf
+18x3x0	18	0	F	Female	3	LHF	Week 13	1	elf	lf_hf
+18x3x4	18	4	F	Female	3	LHF	Week 13	1	elf	lf_hf
+18x3x8	18	8	F	Female	3	LHF	Week 13	1	elf	lf_hf
+18x3x12	18	12	F	Female	3	LHF	Week 13	1	elf	lf_hf
+18x3x16	18	16	F	Female	3	LHF	Week 13	1	elf	lf_hf
+18x3x20	18	20	F	Female	3	LHF	Week 13	1	elf	lf_hf
+19x3x0	19	0	M	Male	3	LHF	Week 13	1	elf	lf_hf
+19x3x4	19	4	M	Male	3	LHF	Week 13	1	elf	lf_hf
+19x3x8	19	8	M	Male	3	LHF	Week 13	1	elf	lf_hf
+19x3x12	19	12	M	Male	3	LHF	Week 13	1	elf	lf_hf
+19x3x16	19	16	M	Male	3	LHF	Week 13	1	elf	lf_hf
+19x3x20	19	20	M	Male	3	LHF	Week 13	1	elf	lf_hf
+20x3x0	20	0	F	Female	3	LHF	Week 13	1	elf	lf_hf
+20x3x4	20	4	F	Female	3	LHF	Week 13	1	elf	lf_hf
+20x3x8	20	8	F	Female	3	LHF	Week 13	1	elf	lf_hf
+20x3x12	20	12	F	Female	3	LHF	Week 13	1	elf	lf_hf
+20x3x16	20	16	F	Female	3	LHF	Week 13	1	elf	lf_hf
+20x3x20	20	20	F	Female	3	LHF	Week 13	1	elf	lf_hf
+21x3x0	21	0	M	Male	3	LHF	Week 13	1	elf	lf_hf
+21x3x4	21	4	M	Male	3	LHF	Week 13	1	elf	lf_hf
+21x3x8	21	8	M	Male	3	LHF	Week 13	1	elf	lf_hf
+21x3x12	21	12	M	Male	3	LHF	Week 13	1	elf	lf_hf
+21x3x16	21	16	M	Male	3	LHF	Week 13	1	elf	lf_hf
+21x3x20	21	20	M	Male	3	LHF	Week 13	1	elf	lf_hf
+22x3x0	22	0	F	Female	3	LHF	Week 13	1	elf	lf_hf
+22x3x4	22	4	F	Female	3	LHF	Week 13	1	elf	lf_hf
+22x3x8	22	8	F	Female	3	LHF	Week 13	1	elf	lf_hf
+22x3x12	22	12	F	Female	3	LHF	Week 13	1	elf	lf_hf
+22x3x16	22	16	F	Female	3	LHF	Week 13	1	elf	lf_hf
+22x3x20	22	20	F	Female	3	LHF	Week 13	1	elf	lf_hf
+23x3x0	23	0	M	Male	3	LHF	Week 13	1	elf	lf_hf
+23x3x8	23	8	M	Male	3	LHF	Week 13	1	elf	lf_hf
+23x3x12	23	12	M	Male	3	LHF	Week 13	1	elf	lf_hf
+23x3x16	23	16	M	Male	3	LHF	Week 13	1	elf	lf_hf
+23x3x20	23	20	M	Male	3	LHF	Week 13	1	elf	lf_hf
+24x3x0	24	0	F	Female	3	LHF	Week 13	1	elf	lf_hf
+24x3x4	24	4	F	Female	3	LHF	Week 13	1	elf	lf_hf
+24x3x8	24	8	F	Female	3	LHF	Week 13	1	elf	lf_hf
+24x3x12	24	12	F	Female	3	LHF	Week 13	1	elf	lf_hf
+24x3x16	24	16	F	Female	3	LHF	Week 13	1	elf	lf_hf
+24x3x20	24	20	F	Female	3	LHF	Week 13	1	elf	lf_hf
+25x3x0	25	0	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+25x3x4	25	4	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+25x3x8	25	8	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+25x3x12	25	12	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+25x3x16	25	16	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+25x3x20	25	20	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+26x3x0	26	0	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+26x3x4	26	4	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+26x3x8	26	8	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+26x3x12	26	12	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+26x3x16	26	16	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+26x3x20	26	20	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+27x3x0	27	0	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+27x3x4	27	4	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+27x3x8	27	8	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+27x3x12	27	12	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+27x3x16	27	16	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+27x3x20	27	20	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+28x3x0	28	0	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+28x3x4	28	4	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+28x3x8	28	8	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+28x3x12	28	12	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+28x3x16	28	16	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+28x3x20	28	20	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+29x3x0	29	0	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+29x3x4	29	4	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+29x3x8	29	8	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+29x3x12	29	12	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+29x3x16	29	16	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+29x3x20	29	20	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+30x3x0	30	0	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+30x3x4	30	4	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+30x3x8	30	8	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+30x3x12	30	12	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+30x3x16	30	16	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+30x3x20	30	20	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+31x3x0	31	0	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+31x3x4	31	4	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+31x3x8	31	8	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+31x3x12	31	12	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+31x3x16	31	16	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+31x3x20	31	20	F	Female	4	EHF	Week 13	1	ehf	hf_lf
+32x3x0	32	0	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+32x3x4	32	4	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+32x3x8	32	8	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+32x3x12	32	12	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+32x3x16	32	16	M	Male	4	EHF	Week 13	1	ehf	hf_lf
+32x3x20	32	20	M	Male	4	EHF	Week 13	1	ehf	hf_lf
