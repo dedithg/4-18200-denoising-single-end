@@ -148,7 +148,10 @@ head(taxonomy)
 
 ```
 
-Now we generate the phyloseq object: 
+
+##Generatoin of the phyloseq object 
+
+Now we generate the phyloseq object, by reading each one of the artifacts exported from qiime using the qza_to_phyloseq function. Note that the metada file has to have the file format including #q2:types comments in the second row of the file in order for the function to work properly and it does not accept missing values in the file. 
 
 ```{r}
 
@@ -161,29 +164,104 @@ sample_variables(ps0) #Display variables from the mapping file
 ntaxa(ps0) #Total number of taxa in the entire data 
 rank_names(ps0) #Taxonomic ranks
 get_taxa_unique(ps0, "Phylum")
-get_taxa_unique(ps0, "Class")
-get_taxa_unique(ps0, "Order")
-get_taxa_unique(ps0, "Family")
-get_taxa_unique(ps0, "Species")
+#get_taxa_unique(ps0, "Class")
+#get_taxa_unique(ps0, "Order")
+#get_taxa_unique(ps0, "Family")
+#get_taxa_unique(ps0, "Species")
 
 ```
+
+##Filtering samples 
 
 Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyse the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
 
 ```{r}
 levels(sample_data(ps0)$week_name)
-psw13<-subset_samples(ps0, week_name != "Baseline")
-levels(sample_data(psw13)$week_name)
+ps0<-subset_samples(ps0, week_name != "Baseline")
+levels(sample_data(ps0)$week_name)
 
-#We also want to exlude from the analysis any animals 
+#We also want to exlude from the analysis any animals that had irregular behavior and we have already excluded from the statistical analysis.
+
+levels(sample_data(psw0)$animal_id)
+ps0<-subset_samples(ps0, animal_id != "13")
+levels(sample_data(ps0)$animal_id)
+
+```
+
+Remove taxa no longer part of the count table due to sample removal
+
+```{r}
+summary(taxa_sums(ps0))
+```
+
+```{r}
+ps0<-prune_taxa(taxa_sums(ps0)>0, ps0)
+summary(taxa_sums(ps0))
+```
+
+##Factor reordering and renaming
+
+The default sorting for ggplot2 is alphabetical. For example, if you want to make a box plot comparing Shannon diversity between MLF and MHF mice, it will by default always place knockout on the MHF and MLF on the right. However, you may wish to switch this order.
+
+This can be done on a plot-by-plot basis, however, it is likely that you will want all of your plots to reflect this customization throughout 
+the entire analysis, so it is useful to have an R chunk at the very beginning of your workflow to specify order and label names.
+
+In the example data, most of the analysis will be done comparing the sample variable "diet_group" which is either MHF, MLF, EHF or ELF included in the mapping file. 
+
+```{r factor-adjustments}
+# Reorder Diet Groups
+levels(sample_data(ps0)$diet_group)
+sample_data(ps0)$diet_group <- factor(sample_data(ps0)$diet_group, levels = c("MHF","MLF","EHF","LHF"))
+levels(sample_data(ps0)$diet_group)
+
+# Reorder Time points
+levels(sample_data(ps0)$zt_time)
+sample_data(ps0)$zt_time <- factor(sample_data(ps0)$zt_time, levels = c("0", "4", "8", "12", "16"))
+levels(sample_data(ps0)$zt_time)
 
 
 ```
 
 
+## Data summary and assessment
 
+While there are numerous possible ways to evaluate your data, a standard starting approach would consist of the following steps:
 
+1) Evaluate Amplicon Sequence Variants (ASV) summary statistics
+2) Detect and remove outlier samples
+3) Taxon cleaning
+4) Prevalence estimation and filtering
 
+*Step 1: Evaluate Amplicon Sequence Variants (ASV) summary statistics*
+Begin by running the following R chunk to produce ASV summary plots
+
+```{r data-assessment}
+# Create a new data frame of the sorted row sums, a column of sorted values from 1 to the total number of individuals/counts for each ASV and a categorical variable stating these are all ASVs.
+readsumsdf <- data.frame(nreads = sort(taxa_sums(ps0), decreasing = TRUE), 
+                        sorted = 1:ntaxa(ps0),
+                        type = "ASVs")
+# Make a data frame with a column for the read counts of each sample for histogram production
+sample_sum_df <- data.frame(sum = sample_sums(ps0))
+# Make plots
+# Generates a bar plot with # of reads (y-axis) for each taxa. Sorted from most to least abundant
+# Generates a second bar plot with # of reads (y-axis) per sample. Sorted from most to least
+p.reads = ggplot(readsumsdf, aes(x = sorted, y = nreads)) +
+  geom_bar(stat = "identity") +
+  ggtitle("ASV Assessment") +
+  scale_y_log10() +
+  facet_wrap(~type, scales = "free") +
+  ylab("# of Sequences")
+# Histogram of the number of Samples (y-axis) at various read depths
+p.reads.hist <- ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(color = "black", fill = "firebrick3", binwidth = 150) +
+  ggtitle("Distribution of sample sequencing depth") + 
+  xlab("Read counts") +
+  ylab("# of Samples")
+# Final plot, side-by-side
+grid.arrange(p.reads, p.reads.hist, ncol = 3)
+# Basic summary statistics
+summary(sample_sums(ps0))
+```
 
 
 
