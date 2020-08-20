@@ -14,17 +14,186 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+To load the Bioconductor package follow the instructions in the following website: 
+https://cran.r-project.org/web/packages/BiocManager/vignettes/BiocManager.html
 
-```{r cars}
-summary(cars)
+##Environment inititation
+
+We will begin by customizing our global settings, activating packages and loading our data into R using the following steps:
+
+1) Set global knitr options
+2) Load libraries (the app store of R)
+3) Set global ggplot2 theme and options
+4) Load data
+
+
+### Set global knitr options
+
+Knitr is a standardized library which "knits" together code chunks and converts them to specified format such as HTML or PDF. This is very useful for report generation. The way in which knitr handles chunk formatting and report generation can be specified in a code chunk. 
+
+There are a large number of ways to customize R code chunks. For the knitr and ggplot2 theme settings (below) I have decided to set include=FALSE (e.g. {r global_options, include=FALSE}). This tells knitr to exclude the chunk from the final report. In this case, the chunk will still be evaluated as part of the RMarkdown document. If you wish to prevent the chunk from being executed at all you can set eval=FALSE.There are a number options you can use in this section [read about here](https://yihui.name/knitr/options/).
+
+```{r global_options, include=FALSE}
+# This chunk defines output figure dimensions,
+# specifies a path where knitted figures will reside after knitting, 
+# and prevents display of warnings in the knitted report
+knitr::opts_chunk$set(fig.width=8,
+                      fig.height=6,
+                      fig.path="../figures/",
+                      dev='png',
+                      warning=FALSE,
+                      message=FALSE)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+You have to install BiocManager to be able to install the libraries that qiime2R depends on
+```{r}
+chooseCRANmirror()
+install.packages("BiocManager")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#To install dependencies from the BiocManager you can use the following command: 
+
+BiocManager::install(c("Biostrings", "biomformat", "phyloseq"))
+BiocManager::install(c("DESeq2"))
+BiocManager::install(c("microbiome"))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+To install qiime2R you can reffer to this tutorial
+https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121
+
+
+or use the following command:
+if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
+devtools::install_github("jbisanz/qiime2R") # current version is 0.99.20
+
+## Load libraries
+
+```{r initiate-environment}
+# Each line below will load a R library and print its currently installed version
+# Notes may be displayed as the packages load, but for the most part these can be ignored
+install.packages("ape")
+install.packages("Hmisc")
+installed.packages("yaml")
+install.packages("tidyr")
+installed.packages("dplyr")
+install.packages("DESeq2")
+
+library("plyr"); packageVersion("plyr")
+library("tidyverse"); packageVersion("tidyverse")
+library("phyloseq"); packageVersion("phyloseq")
+library("vegan"); packageVersion("vegan")
+library("gridExtra"); packageVersion("gridExtra")
+library("knitr"); packageVersion("knitr")
+library("DESeq2"); packageVersion("DESeq2")
+library("plotly"); packageVersion("plotly")
+library("microbiome"); packageVersion("microbiome")
+library("ggpubr"); packageVersion("ggpubr")
+library("data.table"); packageVersion("data.table")
+
+#All other dependencies are included in the following libraries 
+
+
+library(knitr)
+library(qiime2R)
+library(ape)
+library(Biostrings)
+library(biomformat)
+library(phyloseq)
+library(cowplot)
+library(Hmisc)
+library(yaml)
+library(tidyr)
+library(dplyr)
+
+```
+
+## Set global ggplot2 theme and options
+
+This sets the plotting aesthetics for every ggplot2 for the rest of the document. There are a tremendous number of ways to customize your ggplot2 settings using theme_set (see: http://ggplot2.tidyverse.org/reference/theme_get.html). It is best practice to do this at the beginning of the RMarkdown document so that these settings propagated to every plot through the rest of the document.
+
+```{r global-theme-settings, include=FALSE}
+# Set global theming
+# This theme set will change the ggplot2 defaults to use the b&w settings (removes the default gray background) and sets the default font to 12pt Arial
+theme_set(theme_bw(base_size = 12))
+```
+## Read in your data
+
+Since we are working from running the DADA2 program on our samples in Qiime, first we load the table.gza object to the read_qza function to convert it into a phyloseq object 
+
+```{r}
+#I am setting the working directory to the location of the table.qza object I want to transform
+
+list.files()
+#To see details on how the main functions stores the qiime2 artifact you can run: 
+?read_qza
+
+#Details on how the data is read into the object can be ween in the help window on your  right --->
+
+SVs<-read_qza("q2_artfcts/table.qza")
+
+names(SVs)
+
+#read the metadata 
+
+metadata<-read_q2metadata("metadata/metadata_cat.tsv")
+head(metadata)
+taxonomy<-read_qza("q2_artfcts/taxonomy.qza")
+head(taxonomy$data)
+
+#When the taxonomy artifact is imported it is imported as a string so we need to parse it to a table so we can use in downstream analysis
+
+taxonomy<-parse_taxonomy(taxonomy$data)
+head(taxonomy)
+
+```
+
+Now we generate the phyloseq object: 
+
+```{r}
+
+ps0<-qza_to_phyloseq(
+    features="q2_artfcts/table.qza",
+    tree="q2_artfcts/rooted-tree.qza","q2_artfcts/taxonomy.qza",
+    metadata = "metadata/metadata_cat.tsv"
+    )
+sample_variables(ps0) #Display variables from the mapping file
+ntaxa(ps0) #Total number of taxa in the entire data 
+rank_names(ps0) #Taxonomic ranks
+get_taxa_unique(ps0, "Phylum")
+get_taxa_unique(ps0, "Class")
+get_taxa_unique(ps0, "Order")
+get_taxa_unique(ps0, "Family")
+get_taxa_unique(ps0, "Species")
+
+```
+
+Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyse the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
+
+```{r}
+levels(sample_data(ps0)$week_name)
+psw13<-subset_samples(ps0, week_name != "Baseline")
+levels(sample_data(psw13)$week_name)
+
+#We also want to exlude from the analysis any animals 
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
