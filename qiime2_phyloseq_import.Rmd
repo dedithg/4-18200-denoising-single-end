@@ -138,6 +138,7 @@ names(SVs)
 
 metadata<-read_q2metadata("metadata/metadata_cat.tsv")
 head(metadata)
+type(metadata)
 taxonomy<-read_qza("q2_artfcts/taxonomy.qza")
 head(taxonomy$data)
 
@@ -155,50 +156,26 @@ Now we generate the phyloseq object, by reading each one of the artifacts export
 
 ```{r}
 
-ps0<-qza_to_phyloseq(
+ps<-qza_to_phyloseq(
     features="q2_artfcts/table.qza",
     tree="q2_artfcts/rooted-tree.qza","q2_artfcts/taxonomy.qza",
     metadata = "metadata/metadata_cat.tsv"
     )
-sample_variables(ps0) #Display variables from the mapping file
-sample_data(ps0)
-ntaxa(ps0) #Total number of taxa in the entire data 
-rank_names(ps0) #Taxonomic ranks
-get_taxa_unique(ps0, "Phylum")
-#get_taxa_unique(ps0, "Class")
-#get_taxa_unique(ps0, "Order")
-#get_taxa_unique(ps0, "Family")
-#get_taxa_unique(ps0, "Species")
+sample_variables(ps) #Display variables from the mapping file
+sample_data(ps)
+ntaxa(ps) #Total number of taxa in the entire data 
+rank_names(ps) #Taxonomic ranks = 6738
+get_taxa_unique(ps, "Phylum")
+summary(taxa_sums(ps))
+table(tax_table(ps) [, "Phylum"], exclude=NULL)
+#get_taxa_unique(ps, "Class")
+#get_taxa_unique(ps, "Order")
+#get_taxa_unique(ps, "Family")
+#get_taxa_unique(ps, "Species")
 
 ```
+The phyla where only one feature was observed, may be worth filtering, in this case they include Crenarcheota, SR1, Chlamydiae, Synergistetes, WPS-2, Chlorobi, GN02. The phyla that are ambiguously identified "<NA>" may need to be eliminated. There is also contamination from non bacterial phyla like Chloroflexi and we should eliminate those as well.  
 
-##Filtering samples 
-
-Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyse the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
-
-```{r}
-levels(sample_data(ps0)$week_name)
-ps0<-subset_samples(ps0, week_name != "Baseline")
-levels(sample_data(ps0)$week_name)
-
-#We also want to exlude from the analysis any animals that had irregular behavior and we have already excluded from the statistical analysis.
-
-levels(sample_data(psw0)$animal_id)
-ps0<-subset_samples(ps0, animal_id != "13")
-levels(sample_data(ps0)$animal_id)
-
-```
-
-Remove taxa no longer part of the count table due to sample removal
-
-```{r}
-summary(taxa_sums(ps0))
-```
-
-```{r}
-ps0<-prune_taxa(taxa_sums(ps0)>0, ps0)
-summary(taxa_sums(ps0))
-```
 
 ##Factor reordering and renaming
 
@@ -220,6 +197,99 @@ levels(sample_data(ps0)$zt_time)
 sample_data(ps0)$zt_time <- factor(sample_data(ps0)$zt_time, levels = c("0", "4", "8", "12", "16", "20"))
 levels(sample_data(ps0)$zt_time)
 
+
+```
+
+##Filtering samples 
+
+#Eliminate samples from different timepoints
+Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyse the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
+
+```{r}
+levels(sample_data(ps)$week_name)
+ps<-subset_samples(ps, week_name != "Baseline")
+levels(sample_data(ps)$week_name)
+
+#We also want to exclude from the analysis any animals that had irregular behavior and we have already excluded from the statistical analysis.
+
+levels(sample_data(ps)$animal_id)
+ps<-subset_samples(ps, animal_id != "13")
+levels(sample_data(ps)$animal_id)
+
+```
+
+Removed taxa no longer part of the count table due to sample removal
+
+```{r}
+summary(taxa_sums(ps))
+```
+
+```{r}
+ps<-prune_taxa(taxa_sums(ps)>0, ps)
+summary(taxa_sums(ps))
+```
+
+```{r}
+table(tax_table(ps) [, "Phylum"], exclude=NULL)
+```
+Now we can remove samples that have ambiguous phylum annotation 
+
+```{r}
+ps0<-subset_taxa(ps, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized")
+)
+summary(taxa_sums(ps0))
+table(tax_table(ps0) [, "Phylum"], exclude=NULL)
+```
+##Investigating low prevalence/Abundance phylum and subset them out 
+
+```{r}
+#First we generate a prevalence table
+prevelancedf = apply(X = otu_table(ps0),
+                 MARGIN = 1,
+                 FUN = function(x){sum(x > 0)})
+# Add taxonomy and total read counts to this data.frame
+prevelancedf = data.frame(Prevalence = prevelancedf,
+                      TotalAbundance = taxa_sums(ps0),
+                      tax_table(ps0))
+prevelancedf[1:10,]
+
+
+plyr::ddply(prevelancedf, "Phylum", function(df1){
+  data.frame(mean_prevalence=mean(df1$Prevalence),sum_prevalence=sum(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)})
+```
+
+
+```{r}
+
+
+# Compute prevalence of each feature, store as data.frame
+prevdf = apply(X = otu_table(ps0),
+                 MARGIN = ifelse(taxa_are_rows(ps0), yes = 1, no = 2),
+                 FUN = function(x){sum(x > 0)})
+# Add taxonomy and total read counts to this data.frame
+prevdf = data.frame(Prevalence = prevdf,
+                      TotalAbundance = taxa_sums(ps0),
+                      tax_table(ps0))
+
+plyr::ddply(prevdf, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
+```
+```{r}
+
+ps0
+
+
+```
+
+
+#We will filter the samples with very low frequency reads (>5) 
+
+```{r}
+phyla2filter = c("Acidobacteria", "Armatimonadetes", "Chlamydiae", "Gemmatimonadetes", "GN02", "Lentisphaerae", "OD1","Planctomycetes")
+
+#Filter entries with phylums included in the list we made
+ps0=subset_taxa(ps0, !Phylum %in% phyla2filter)
+
+ps0
 
 ```
 
@@ -338,8 +408,53 @@ get_taxa_unique(ps2, "Kingdom")
 get_taxa_unique(ps2, "Class")
 ```
 
+## Prevalance assessment
+
+Identification of taxa that are poorly represented in an unsupervised manner can identify taxa that will have little to no effect on downstream analysis. Sufficient removal of these "low prevalence" features can enhance many analysis by focusing statistical testing on taxa common throughout the data.
+
+This approach is frequently poorly documented or justified in methods sections of manuscripts, but will typically read something like, "Taxa present in fewer than 3% of all of the samples within the study population and less than 5% relative abundance were removed from all subsequent analysis.".
+
+While the ultimate selection criteria can still be subjective, the following plots can be useful for making your selection criteria.
+
+```{r prevalence-assessment}
+# Prevalence estimation
+# Calculate feature prevalence across the data set
+prevdf <- apply(X = otu_table(ps2),MARGIN = ifelse(taxa_are_rows(ps2), yes = 1, no = 2),FUN = function(x){sum(x > 0)})
+# Add taxonomy and total read counts to prevdf
+prevdf <- data.frame(Prevalence = prevdf, TotalAbundance = taxa_sums(ps2), tax_table(ps2))
+#Prevalence plot
+prevdf1 <- subset(prevdf, Phylum %in% get_taxa_unique(ps0, "Phylum"))
+p.prevdf1 <- ggplot(prevdf1, aes(TotalAbundance, Prevalence / nsamples(ps2),color=Family)) +
+  geom_hline(yintercept = 0.0005, alpha = 0.5, linetype = 2) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_x_log10() +
+  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+  facet_wrap(~Phylum) +
+  theme(legend.position="none") +
+  ggtitle("Phylum Prevalence in All Samples\nColored by Family")
+p.prevdf1
+```
+This code will produce a plot of all of the Phyla present in your samples along with information about their prevalence (fraction of samples they are present in) and total abundance across all samples. In this example we drew a dashed horizontal line to cross at the 5% prevalence level (present in > 5% of all of the samples in the study). If you set a threshold to remove taxa below that level you can visually see how many and what types of taxa will be removed. Whatever, threshold you choose to use it should be well documented within your materials and methods.
 
 
+An example on how to filter low prevalent taxa is below.
 
-
-
+```{r prevelance-filtering}
+# Remove specific taxa
+# Define a list with taxa to remove
+filterPhyla = c("Fusobacteria", "Tenericutes")
+filterPhyla
+get_taxa_unique(ps2, "Phylum")
+ps2.prev <- subset_taxa(ps2, !Phylum %in% filterPhyla) 
+get_taxa_unique(ps2.prev, "Phylum")
+# Removing taxa that fall below 5% prevelance
+# Define the prevalence threshold
+prevalenceThreshold = 0.05 * nsamples(ps2)
+prevalenceThreshold
+# Define which taxa fall within the prevalence threshold
+keepTaxa <- rownames(prevdf1)[(prevdf1$Prevalence >= prevalenceThreshold)]
+ntaxa(ps2)
+# Remove those taxa
+ps2.prev <- prune_taxa(keepTaxa, ps2)
+ntaxa(ps2.prev)
+```
