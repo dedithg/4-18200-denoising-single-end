@@ -375,12 +375,9 @@ The example data does hot have many samples with fewer than 3,000 ASV other than
 ```{r sample-outlier-removal}
 nsamples(ps0)
 
-levels(sample_data(ps0))
-ps1 <- subset_samples(ps0, sample !="5x3x12")
+#levels(sample_data(ps0)$name)
+ps1 <- subset_samples(ps0, name !="5x3x12")
 
-ps1 <- ps0 %>% subset_samples(
-    name != "5x3x12"
-    )
 nsamples(ps1)
 ```
 
@@ -398,14 +395,18 @@ get_taxa_unique(ps1, "Class")
 ps1 # Check the number of taxa prior to removal
 ps2 <- ps1 %>%
   subset_taxa(
-    Kingdom == "Bacteria" &
-    Family  != "mitochondria" &
-    Class   != "Chloroplast" &
-    Phylum != "Cyanobacteria/Chloroplast"
-  )
+    Kingdom == "Bacteria" #&
+    #Family  != "mitochondria" &
+    #Class   != "Chloroplast" &
+    #Phylum != "Cyanobacteria/Chloroplast"
+)
 ps2 # Confirm that the taxa were removed
+get_taxa_unique(ps1, "Kingdom")
 get_taxa_unique(ps2, "Kingdom")
+
+get_taxa_unique(ps1, "Class")
 get_taxa_unique(ps2, "Class")
+
 ```
 
 ## Prevalance assessment
@@ -425,8 +426,8 @@ prevdf <- data.frame(Prevalence = prevdf, TotalAbundance = taxa_sums(ps2), tax_t
 #Prevalence plot
 prevdf1 <- subset(prevdf, Phylum %in% get_taxa_unique(ps0, "Phylum"))
 p.prevdf1 <- ggplot(prevdf1, aes(TotalAbundance, Prevalence / nsamples(ps2),color=Family)) +
-  geom_hline(yintercept = 0.0005, alpha = 0.5, linetype = 2) +
-  geom_point(size = 3, alpha = 0.7) +
+  geom_hline(yintercept = 0.01, alpha = 0.5, linetype = 2) +
+  geom_point(size = .5, alpha = 0.7) +
   scale_x_log10() +
   xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
   facet_wrap(~Phylum) +
@@ -442,14 +443,14 @@ An example on how to filter low prevalent taxa is below.
 ```{r prevelance-filtering}
 # Remove specific taxa
 # Define a list with taxa to remove
-filterPhyla = c("Fusobacteria", "Tenericutes")
-filterPhyla
-get_taxa_unique(ps2, "Phylum")
-ps2.prev <- subset_taxa(ps2, !Phylum %in% filterPhyla) 
-get_taxa_unique(ps2.prev, "Phylum")
+#filterPhyla = c("Fusobacteria", "Tenericutes")
+#filterPhyla
+#get_taxa_unique(ps2, "Phylum")
+#ps2.prev <- subset_taxa(ps2, !Phylum %in% filterPhyla) 
+#get_taxa_unique(ps2.prev, "Phylum")
 # Removing taxa that fall below 5% prevelance
 # Define the prevalence threshold
-prevalenceThreshold = 0.05 * nsamples(ps2)
+prevalenceThreshold = 0.01 * nsamples(ps2)
 prevalenceThreshold
 # Define which taxa fall within the prevalence threshold
 keepTaxa <- rownames(prevdf1)[(prevdf1$Prevalence >= prevalenceThreshold)]
@@ -458,3 +459,119 @@ ntaxa(ps2)
 ps2.prev <- prune_taxa(keepTaxa, ps2)
 ntaxa(ps2.prev)
 ```
+
+Because  agglomerate taxa at the Genus level (combine all with the same name) and remove all taxa without genus level assignment
+
+```{r}
+#We can do it using a taxonomic method 
+
+# How many genera would be present after filtering?
+length(get_taxa_unique(ps2, taxonomic.rank = "Genus"))
+## [1] 49
+ps3 = tax_glom(ps2.prev, "Genus", NArm = TRUE)
+
+sum(colSums(otu_table(ps3)))
+```
+
+```{r}
+#Or by determining a tree hight at which you want to conglomerate the measures 
+
+h1 = 0.4
+ps4 = tip_glom(ps2.prev, h = h1)
+sum(colSums(otu_table(ps4)))
+
+```
+
+We can generate a tree picture from each method and compare it to the previous tree "Before Agglomeration"
+
+```{r}
+multiPlotTitleTextSize = 15
+p2tree = plot_tree(ps2, method = "treeonly",
+                   ladderize = "left",
+                   title = "Before Agglomeration") +
+  theme(plot.title = element_text(size = multiPlotTitleTextSize))
+p3tree = plot_tree(ps3, method = "treeonly",
+                   ladderize = "left", title = "By Genus") +
+  theme(plot.title = element_text(size = multiPlotTitleTextSize))
+p4tree = plot_tree(ps4, method = "treeonly",
+                   ladderize = "left", title = "By Height") +
+  theme(plot.title = element_text(size = multiPlotTitleTextSize))
+# group plots together
+grid.arrange(nrow = 1, p2tree, p3tree, p4tree)
+```
+
+It is usually necessary to transform microbiome count data to account for differences in library size, variance, scale, etc. The phyloseq package provides a flexible interface for defining new functions to accomplish these transformations of the abundance values via the function transform_sample_counts(). The first argument to this function is the phyloseq object you want to transform, and the second argument is an R function that defines the transformation. The R function is applied sample-wise, expecting that the first unnamed argument is a vector of taxa counts in the same order as the phyloseq object. Additional arguments are passed on to the function specified in the second argument, providing an explicit means to include pre-computed values, previously defined parameters/thresholds, or any other object that might be appropriate for computing the transformed values of interest.
+
+This example begins by defining a custom plot function, plot_abundance(), that uses phyloseq’s function to define a relative abundance graphic. We will use this to compare more easily differences in scale and distribution of the abundance values in our phyloseq object before and after transformation.
+```{r}
+plot_abundance = function(physeq,title = "",
+                          Facet = "Order", Color = "sex"){
+  # Arbitrary subset, based on Phylum, for plotting
+  p1f = subset_taxa(ps2.prev, Phylum %in% c("Firmicutes"))
+  mphyseq = psmelt(p1f)
+  mphyseq <- subset(mphyseq, Abundance > 0)
+  ggplot(data = mphyseq, mapping = aes_string(x = "sex",y = "Abundance",
+                              color = Color, fill = Color)) +
+    geom_violin(fill = NA) +
+    geom_point(size = 1, alpha = 0.3,
+               position = position_jitter(width = 0.3)) +
+    facet_wrap(facets = Facet) + scale_y_log10()+
+    theme(legend.position="none")
+}
+```
+The transformation in this case converts the counts from each sample into their frequencies, often referred to as proportions or relative abundances. This function is so simple that it is easiest to define it within the function call to transform_sample_counts().
+```{r}
+# Transform to relative abundance. Save as new object.
+ps2ra = transform_sample_counts(ps2.prev, function(x){x / sum(x)})
+```
+Now we plot the abundance values before and after transformation.
+
+```{r}
+plotBefore = plot_abundance(ps2,"")
+plotAfter = plot_abundance(ps2ra,"")
+# Combine each plot into one graphic.
+grid.arrange(nrow = 2,  plotBefore, plotAfter)
+```
+```{r}
+psOrd = subset_taxa(ps2ra, Order == "Bacillales")
+plot_abundance(psOrd, Facet = "Family", Color = NULL)
+```
+
+Do some simple ordination looking for outlier samples, first we variance stabilize the data with a log transform, the perform PCoA using bray’s distances
+
+```{r}
+logt  = transform_sample_counts(ps3, function(x) log(1 + x) )
+out.pcoa.logt <- ordinate(logt, method = "PCoA", distance = "bray")
+evals <- out.pcoa.logt$values$Eigenvalues
+plot_ordination(logt, out.pcoa.logt, type = "samples", 
+                color = "diet_group", shape = "sex") + labs(col = "zt_time") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+
+```
+
+
+```{r}
+.cran_packages <- c( "shiny","miniUI", "caret", "pls", "e1071", "ggplot2", "randomForest", "dplyr", "ggrepel", "nlme", "devtools",
+                  "reshape2", "PMA", "structSSI", "ade4",
+                  "ggnetwork", "intergraph", "scales")
+.github_packages <- c("jfukuyama/phyloseqGraphTest")
+.bioc_packages <- c("genefilter", "impute")
+# Install CRAN packages (if not already installed)
+.inst <- .cran_packages %in% installed.packages()
+if (any(!.inst)){
+  install.packages(.cran_packages[!.inst],repos = "http://cran.rstudio.com/")
+}
+.inst <- .github_packages %in% installed.packages()
+if (any(!.inst)){
+  devtools::install_github(.github_packages[!.inst])
+}
+
+.inst <- .bioc_packages %in% installed.packages()
+if(any(!.inst)){
+  source("http://bioconductor.org/biocLite.R")
+  biocLite(.bioc_packages[!.inst])
+}
+```
+
+
+
