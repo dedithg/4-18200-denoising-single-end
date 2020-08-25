@@ -161,25 +161,60 @@ ps<-qza_to_phyloseq(
     tree="q2_artfcts/rooted-tree.qza","q2_artfcts/taxonomy.qza",
     metadata = "metadata/metadata_cat.tsv"
     )
-sample_variables(ps) #Display variables from the mapping file
-sample_data(ps)
-ntaxa(ps) #Total number of taxa in the entire data 
-rank_names(ps) #Taxonomic ranks = 6738
-get_taxa_unique(ps, "Phylum")
-summary(taxa_sums(ps))
-table(tax_table(ps) [, "Phylum"], exclude=NULL)
-#get_taxa_unique(ps, "Class")
-#get_taxa_unique(ps, "Order")
-#get_taxa_unique(ps, "Family")
-#get_taxa_unique(ps, "Species")
+ps
 
 ```
-The phyla where only one feature was observed, may be worth filtering, in this case they include Crenarcheota, SR1, Chlamydiae, Synergistetes, WPS-2, Chlorobi, GN02. The phyla that are ambiguously identified "<NA>" may need to be eliminated. There is also contamination from non bacterial phyla like Chloroflexi and we should eliminate those as well.  
 
+Here we can see that we have a phyloseq object that consists of: 
+- An OTU (in this case contains Amplicon Sequence Variants [ASVs]) table with 6738 taxa and 279 samples (this includes the baseline and week 13 samples)
+- A sample data file consisting of 11 variables
+- A Taxonomy table with 7 taxonomic ranks
+- A phylogenetic tree with 6738 tips and 6722 internal nodes
 
-##Factor reordering and renaming
+##What does the phyloseq object contain?
 
-The default sorting for ggplot2 is alphabetical. For example, if you want to make a box plot comparing Shannon diversity between MLF and MHF mice, it will by default always place knockout on the MHF and MLF on the right. However, you may wish to switch this order.
+Lets looks at the data in more detail: 
+```{r}
+nsamples(ps)
+```
+We have 279 samples
+
+```{r}
+sample_names(ps)
+```
+The sample names 
+
+```{r}
+sample_variables(ps)
+```
+The metadata for the phyloseq object contains the following variable names
+
+```{r}
+head(sample_data(ps))
+```
+To look at the data from one of those variables we can use 
+```{r}
+sample_data(ps)$animal_id
+#Because the data is considered a Factor by R it displays it in alphabetical order instead of numerical
+```
+
+We can display a summary table of the variables we have in the metadata 
+```{r}
+table(sample_data(ps)$diet_group)
+table(sample_data(ps)$sex)
+table(sample_data(ps)$zt_time)
+```
+```{r}
+
+mtdt<- data.frame(sample_data(ps))
+head(mtdt)
+
+```
+Specific components of the ps object can be extracted and converted to a data.frame for additional analyses.
+
+####Factor reordering and renaming
+
+Before we continue with any analysis we need to reorder and rename variables to make things more convenient for us in downstream analysis. The default sorting for ggplot2 is alphabetical. For example, if you want to make a box plot comparing Shannon diversity between MLF and MHF mice, it will by default always place knockout on the MHF and MLF on the right. However, you may wish to switch this order.
 
 This can be done on a plot-by-plot basis, however, it is likely that you will want all of your plots to reflect this customization throughout 
 the entire analysis, so it is useful to have an R chunk at the very beginning of your workflow to specify order and label names.
@@ -188,29 +223,32 @@ In the example data, most of the analysis will be done comparing the sample vari
 
 ```{r factor-adjustments}
 # Reorder Diet Groups
-levels(sample_data(ps0)$diet_group)
-sample_data(ps0)$diet_group <- factor(sample_data(ps0)$diet_group, levels = c("MHF","MLF","EHF","LHF"))
-levels(sample_data(ps0)$diet_group)
+levels(sample_data(ps)$diet_group)
+sample_data(ps)$diet_group <- factor(sample_data(ps)$diet_group, levels = c("MHF","MLF","EHF","LHF"))
+levels(sample_data(ps)$diet_group)
 
 # Reorder Time points
-levels(sample_data(ps0)$zt_time)
-sample_data(ps0)$zt_time <- factor(sample_data(ps0)$zt_time, levels = c("0", "4", "8", "12", "16", "20"))
-levels(sample_data(ps0)$zt_time)
+levels(sample_data(ps)$zt_time)
+sample_data(ps)$zt_time <- factor(sample_data(ps)$zt_time, levels = c("0", "4", "8", "12", "16", "20"))
+levels(sample_data(ps)$zt_time)
 
+# Reorder Time points
+levels(sample_data(ps)$animal_id)
+sample_data(ps)$animal_id <- factor(sample_data(ps)$animal_id, levels = c("1", "2", "3", "4","5","6","7","8", "9","10","11", "12","13","14", "16","17","18","19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32"))
+levels(sample_data(ps)$animal_id)
 
 ```
 
-##Filtering samples 
-
 #Eliminate samples from different timepoints
-Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyse the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
+
+Our samples include several weeks of the study and we may want to filter out samples by an specific variable, in this case we will only analyze the data at week 13 of the study so we will filter all samples where the variable week_name is "Baseline"
 
 ```{r}
 levels(sample_data(ps)$week_name)
 ps<-subset_samples(ps, week_name != "Baseline")
 levels(sample_data(ps)$week_name)
 
-#We also want to exclude from the analysis any animals that had irregular behavior and we have already excluded from the statistical analysis.
+#We also want to exclude from the analysis any animals that had irregular behavior and we have already excluded from the statistical analysis of the metabolic data.
 
 levels(sample_data(ps)$animal_id)
 ps<-subset_samples(ps, animal_id != "13")
@@ -218,16 +256,61 @@ levels(sample_data(ps)$animal_id)
 
 ```
 
-Removed taxa no longer part of the count table due to sample removal
+Reviewing the content of the phyloseq object we can see
+
+```{r}
+ps
+```
+Here we can see that now we have a phyloseq object that consists of: 
+- An OTU (in this case contains Amplicon Sequence Variants [ASVs]) table with still 6738 taxa and but now we only have 178 samples (week 13)
+- A sample data file consisting of 11 variables
+- A Taxonomy table with 7 taxonomic ranks
+- A phylogenetic tree with 6738 tips and 6722 internal nodes
+
+The data file still has the same number of variables, and the taxonomy table has the same 7 taxonomic ranks, this makes sense, but we should have lost some of the tree branches since we lost some of the samples in the study. 
+
+First lets check how many total taxa we have 
 
 ```{r}
 summary(taxa_sums(ps))
 ```
 
+We will now remove the taxa no longer part of the count table due to sample removal
 ```{r}
 ps<-prune_taxa(taxa_sums(ps)>0, ps)
 summary(taxa_sums(ps))
 ```
+```{r}
+ps
+```
+Here we can see that now we have a phyloseq object that consists of: 
+- An OTU (in this case contains Amplicon Sequence Variants [ASVs]) table with now 3938 taxa and 178 samples (week 13)
+- A sample data file consisting of 11 variables
+- A Taxonomy table with 7 taxonomic ranks
+- A now our phylogenetic tree contains only 3938 tips and 3938 internal nodes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The phyla where only one feature was observed, may be worth filtering, in this case they include Crenarcheota, SR1, Chlamydiae, Synergistetes, WPS-2, Chlorobi, GN02. The phyla that are ambiguously identified "<NA>" may need to be eliminated. There is also contamination from non bacterial phyla like Chloroflexi and we should eliminate those as well.  
+
+
+
+
+
+
+
 
 ```{r}
 table(tax_table(ps) [, "Phylum"], exclude=NULL)
@@ -240,6 +323,10 @@ ps0<-subset_taxa(ps, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized")
 summary(taxa_sums(ps0))
 table(tax_table(ps0) [, "Phylum"], exclude=NULL)
 ```
+
+
+
+
 ##Investigating low prevalence/Abundance phylum and subset them out 
 
 ```{r}
@@ -289,9 +376,25 @@ phyla2filter = c("Acidobacteria", "Armatimonadetes", "Chlamydiae", "Gemmatimonad
 #Filter entries with phylums included in the list we made
 ps0=subset_taxa(ps0, !Phylum %in% phyla2filter)
 
+
 ps0
 
+hist(sample_sums(ps), main="Histogram: Read Counts", xlab="Total Reads", 
+     border="blue", col="green", las=1, breaks=12)
 ```
+
+```{r}
+metadata$total_reads <- sample_sums(ps)
+```
+
+
+
+
+
+
+
+
+
 
 
 ## Data summary and assessment
@@ -384,6 +487,36 @@ nsamples(ps1)
 Note that we created a new PhyloSeq object called ps1. This preserves all of the data in the original ps0 and creates a new data object with the offending samples removed called ps1.
 
 Failure to detect and remove "bad" samples can make interpreting ordinations much more challenging as they typically project as "outliers" severely skewing the rest of the samples. These samples also increase variance and will impede your ability to identify diferentially abundant taxa between groups. Thus sample outlier removal should be a serious and thoughtful part of every analysis in order to obtain optimal results.
+
+###Alpha-Diversity 
+
+```{r}
+head(estimate_richness(ps1))
+```
+
+```{r}
+
+(p <- plot_richness(ps, x = "zt_time", color = "sex", measures = c("Observed", "Shannon")))
+
+p + labs(x = "", y = "Alpha Diversity Measure\n") + 
+  theme_bw()
+
+
+```
+###Beta diversity ordination 
+
+```{r}
+ps_bray <- ordinate(ps, "NMDS", "bray")
+plot_ordination(ps, ps_bray, type="samples", color="diet_group", shape = "sex") + geom_point(size = 3) 
+
+```
+
+
+
+
+
+
+
 
 *Step 3: Taxon cleaning*
 The following R chunk removes taxa not-typically part of a bacterial microbiome analysis.
@@ -548,6 +681,24 @@ plot_ordination(logt, out.pcoa.logt, type = "samples",
   coord_fixed(sqrt(evals[2] / evals[1]))
 
 ```
+
+To generate a heatmaap 
+
+```{r}
+ plot_heatmap(ps3, method = "NMDS", distance = "bray")
+```
+its too cluttered so we should only count the most abundant AVSs
+
+```{r}
+ total = median(sample_sums(ps3))
+  ps3_abund <- filter_taxa(ps3, function(x) sum(x > total*0.20) > 0, TRUE)
+  ps3_abund
+  
+    plot_heatmap(ps3_abund, method = "NMDS", distance = "bray")
+
+```
+
+
 
 
 ```{r}
