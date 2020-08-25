@@ -1,0 +1,22 @@
+---
+title: "analysis_code"
+author: "Diana_Gutierrez"
+date: "8/25/2020"
+output: html_document
+---
+####EXAMPLE CODE########
+
+This markdown contains examples of code you can use for your analysis. There is no preset way of analyzing your data and there are decisions that need to be made depending on your data quality, characteristics and other experimental factors so you should use this code and apply it to what you need to evaluate in your especific analysis
+
+###Exploratory code 
+
+```{r}
+hist(sample_sums(ps), main="Histogram: Read Counts", xlab="Total Reads", 
+     border="blue", col="green", las=1, breaks=12)
+```
+
+
+
+
+
+###Graphic code 
