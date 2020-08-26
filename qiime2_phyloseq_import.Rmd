@@ -522,50 +522,13 @@ Note that we created a new PhyloSeq object called ps2. This preserves all of the
 
 Failure to detect and remove "bad" samples can make interpreting ordinations much more challenging as they typically project as "outliers" severely skewing the rest of the samples. These samples also increase variance and will impede your ability to identify diferentially abundant taxa between groups. Thus sample outlier removal should be a serious and thoughtful part of every analysis in order to obtain optimal results.
 
-###Alpha-Diversity 
-
-```{r}
-head(estimate_richness(ps2))
-```
-
-```{r}
-
-(p <- plot_richness(ps, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
-
-(p1 <- plot_richness(ps1, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
-
-(p2 <- plot_richness(ps2, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
-
-p + labs(x = "", y = "\nAlpha Diversity Measure (p) \n") + 
-  theme_bw()
-p1 + labs(x = "", y = "\nAlpha Diversity Measure (p1) \n") + 
-  theme_bw()
-p2 + labs(x = "", y = "\nAlpha Diversity Measure (p2)\n") + 
-  theme_bw()
-
-```
-###Beta diversity ordination 
-
-```{r}
-ps_bray <- ordinate(ps, "NMDS", "bray")
-plot_ordination(ps, ps_bray, type="samples", color="diet_group", shape = "sex") + geom_point(size = 3) 
-
-```
-
-
-
-
-
-
-
-
 *Step 3: Taxon cleaning*
 The following R chunk removes taxa not-typically part of a bacterial microbiome analysis.
 
 ```{r taxon-cleaning}
 # Some examples of taxa you may not want to include in your analysis
-get_taxa_unique(ps1, "Kingdom")
-get_taxa_unique(ps1, "Class")
+get_taxa_unique(ps2, "Kingdom")
+get_taxa_unique(ps2, "Class")
 ps1 # Check the number of taxa prior to removal
 ps2 <- ps1 %>%
   subset_taxa(

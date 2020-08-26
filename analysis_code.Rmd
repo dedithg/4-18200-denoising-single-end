@@ -49,4 +49,37 @@ This highlights how we might use phyloseq as a tool to filter taxa prior to stat
 
 
 
-###Graphic code 
+*###Graphic code###* 
+###Alpha-Diversity 
+
+```{r}
+head(estimate_richness(ps2))
+```
+
+
+
+
+
+```{r}
+
+(p <- plot_richness(ps2, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
+(ps <- plot_richness(ps, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
+
+p + labs(x = "", y = "\nAlpha Diversity Measure\n") + 
+  theme_bw()
+
+
+
+```
+###Beta diversity ordination 
+
+```{r}
+ps_bray <- ordinate(ps2, "NMDS", "bray")
+plot_ordination(ps, ps_bray, type="samples", color="diet_group", shape = "sex") + geom_point(size = 3) 
+
+```
+
+
+
+
+
