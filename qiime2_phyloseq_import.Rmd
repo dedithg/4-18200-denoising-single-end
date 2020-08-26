@@ -287,41 +287,79 @@ Here we can see that now we have a phyloseq object that consists of:
 - An OTU (in this case contains Amplicon Sequence Variants [ASVs]) table with now 3938 taxa and 178 samples (week 13)
 - A sample data file consisting of 11 variables
 - A Taxonomy table with 7 taxonomic ranks
-- A now our phylogenetic tree contains only 3938 tips and 3938 internal nodes
+- A now our phylogenetic tree contains only 3938 tips and 3933 internal nodes
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-The phyla where only one feature was observed, may be worth filtering, in this case they include Crenarcheota, SR1, Chlamydiae, Synergistetes, WPS-2, Chlorobi, GN02. The phyla that are ambiguously identified "<NA>" may need to be eliminated. There is also contamination from non bacterial phyla like Chloroflexi and we should eliminate those as well.  
-
-
-
-
-
-
+####Examining read and taxa characteristics 
 
 
 ```{r}
-table(tax_table(ps) [, "Phylum"], exclude=NULL)
+sort(table(tax_table(ps) [, "Phylum"], exclude=NULL))
 ```
-Now we can remove samples that have ambiguous phylum annotation 
+In our dataset we have a total of 21 categories at the Phylum level. As expected the large majority of taxa belong to the Firmicutes and Bacteroidetes phyla and comming right behind is the Proteobacteria phylum.  
+
+The phyla where only one feature was observed, may be worth filtering, in this case they include Crenarcheota, SR1, Chlamydiae, Synergistetes, WPS-2, Chlorobi, GN02. The phyla that are ambiguously identified "<NA>" may need to be eliminated. 
 
 ```{r}
-ps0<-subset_taxa(ps, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized")
-)
-summary(taxa_sums(ps0))
-table(tax_table(ps0) [, "Phylum"], exclude=NULL)
+sort(table(tax_table(ps) [, "Kingdom"], exclude=NULL))
+```
+There is also contamination from non bacterial phyla like Chloroflexi and we should eliminate those as well. 
+
+##Examining the number of reads for each sample
+
+```{r}
+sort(sample_sums(ps))
+
+```
+This list does not make a lot of sense, so we can graph it in a histogram 
+
+```{r}
+hist(sample_sums(ps), main="Histogram: Read Counts", xlab="Total Reads", 
+     border="blue", col="green", las=1, breaks=12)
+```
+We can add this information to the phyloseq metadata 
+```{r}
+sample_data(ps)$total_reads <- sample_sums(ps)
+head(sample_data(ps))
+#mean(sample_data(ps)$total_reads)
+#median(sample_data(ps)$total_reads)
+```
+###Examinins the OTU/AVS table 
+```{r}
+ntaxa(ps)
+
+```
+
+```{r}
+head(taxa_names(ps)) #this command just shows the first taxa names
+asv_tab <- data.frame(otu_table(ps)) #this command saves the AVS sable as a data frame 
+
+```
+
+
+
+###Examining the taxonomy
+```{r}
+rank_names(ps)
+```
+We have seven taxonomical levels 
+
+```{r}
+head(tax_table(ps))
+sort(table(tax_table(ps)[, 2]))
+
+```
+This evaluation can help you identified errors in sequecing that made through the denoising step. 
+
+####Continuation to filtering... 
+
+We observed before that many taxa are not clearly annotated at the phylum level. Now we can remove samples that have ambiguous phylum annotation 
+
+```{r}
+summary(taxa_sums(ps))
+sort(table(tax_table(ps) [, "Phylum"]))
+ps0<-subset_taxa(ps, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized") ) #this command subsets the phyloseq object eliminating the ambigously annotated phylaa                                                                     
+summary(taxa_sums(ps0)) #lets see how the summary of them has changed
+sort(table(tax_table(ps0) [, "Phylum"], exclude=NULL))  #now you see we no longer have 
 ```
 
 
