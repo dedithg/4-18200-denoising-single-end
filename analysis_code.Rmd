@@ -17,6 +17,36 @@ hist(sample_sums(ps), main="Histogram: Read Counts", xlab="Total Reads",
 
 
 
+###Aglomerating data 
+
+Here we are agglomerating the counts to the Phylum-level and then renaming the ASVs to make them more descriptive. We can see that we have 10 Phyla. The ASV information (i.e. refseq and taxonomy for one of the ASVs in each Phylum) gets carried along for the ride (we can typically ignore this or you can remove these components if you prefer).
+
+
+```{r}
+(ps_phylum <- tax_glom(ps, "Phylum"))
+taxa_names(ps_phylum)
+taxa_names(ps_phylum) <- tax_table(ps_phylum)[, 2]
+taxa_names(ps_phylum)
+otu_table(ps_phylum)[1:5, c(1:3, 5, 7)]
+
+```
+
+###Subset Data
+
+```{r}
+#We can also subset taxa…
+(ps_bacteroides <- subset_taxa(ps, Genus == "Bacteroides"))
+tax_table(ps_bacteroides)
+prune_taxa(taxa_sums(ps) > 100, ps) 
+filter_taxa(ps, function(x) sum(x > 10) > (0.1*length(x)), TRUE)   
+
+```
+With the above commands we can quickly see that we have:
+A total of 3 ASVs classified as Bacteroides
+A total of 99 ASVs seen at least 100 times across all samples
+A total of 135 taxa seen at least 10 times in at least 10% of samples
+This highlights how we might use phyloseq as a tool to filter taxa prior to statistical analysis.
+
 
 
 ###Graphic code 

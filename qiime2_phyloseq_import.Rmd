@@ -37,9 +37,9 @@ There are a large number of ways to customize R code chunks. For the knitr and g
 # This chunk defines output figure dimensions,
 # specifies a path where knitted figures will reside after knitting, 
 # and prevents display of warnings in the knitted report
-knitr::opts_chunk$set(fig.width=8,
+knitr::opts_chunk$set(fig.width=8,62,
                       fig.height=6,
-                      fig.path="../figures/",
+                      fig.path="figures/",
                       dev='png',
                       warning=FALSE,
                       message=FALSE)
@@ -326,7 +326,7 @@ head(sample_data(ps))
 ###Examinins the OTU/AVS table 
 ```{r}
 ntaxa(ps)
-
+              
 ```
 
 ```{r}
@@ -384,48 +384,41 @@ prevdf
 
 plyr::ddply(prevdf, "Phylum", function(df1){cbind(Mean_Prevalence=mean(df1$Prevalence),Sum_Prevalence=sum(df1$Prevalence), Total_Abundance=sum(df1$TotalAbundance))})
 ```
+Lets take a look at what our phyloseq object contains
 ```{r}
-
 ps0
-
-
 ```
 
-```{r}
-#First we generate a prevalence table
-prevelancedf = apply(X = otu_table(ps0),
-                 MARGIN = 1,
-                 FUN = function(x){sum(x > 0)})
-# Add taxonomy and total read counts to this data.frame
-prevelancedf = data.frame(Prevalence = prevelancedf,
-                      TotalAbundance = taxa_sums(ps0),
-                      tax_table(ps0))
-prevelancedf[1:10,]
-
-
-plyr::ddply(prevelancedf, "Phylum", function(df1){
-  data.frame(mean_prevalence=mean(df1$Prevalence),sum_prevalence=sum(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)})
-```
-
-
-
-#We will filter the samples with very low frequency reads (>5) 
+We will filter the samples with very low frequency reads (>5) 
 
 ```{r}
 phyla2filter = c("Acidobacteria", "Armatimonadetes", "Chlamydiae", "Gemmatimonadetes", "GN02", "Lentisphaerae", "OD1","Planctomycetes")
 
 #Filter entries with phylums included in the list we made
-ps0=subset_taxa(ps0, !Phylum %in% phyla2filter)
+ps1=subset_taxa(ps0, !Phylum %in% phyla2filter)
 
 
-ps0
+ps1
 
-hist(sample_sums(ps), main="Histogram: Read Counts", xlab="Total Reads", 
+hist(sample_sums(ps1), main="Histogram: Read Counts", xlab="Total Reads", 
      border="blue", col="green", las=1, breaks=12)
+
+summary(taxa_sums(ps1))
 ```
+We now have a phyloseq object with only 3405 taxa/tips (instead of 3419)
 
 ```{r}
-metadata$total_reads <- sample_sums(ps)
+summary(taxa_sums(ps0))
+ps0<-prune_taxa(taxa_sums(ps0)>0, ps0)
+summary(taxa_sums(ps0))
+```
+```{r}
+ps0
+```
+
+
+```{r}
+metadata$total_reads <- sample_sums(ps0)
 ```
 
 
