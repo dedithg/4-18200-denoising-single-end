@@ -345,27 +345,51 @@ We have seven taxonomical levels
 
 ```{r}
 head(tax_table(ps))
+sort(table(tax_table(ps) [, "Phylum"], exclude=NULL))
+
 sort(table(tax_table(ps)[, 2]))
 
 ```
 This evaluation can help you identified errors in sequecing that made through the denoising step. 
 
 ####Continuation to filtering... 
+###Taxonomic filtering
+
 
 We observed before that many taxa are not clearly annotated at the phylum level. Now we can remove samples that have ambiguous phylum annotation 
 
 ```{r}
 summary(taxa_sums(ps))
-sort(table(tax_table(ps) [, "Phylum"]))
+sort(table(tax_table(ps) [, "Phylum"], exclude=NULL))
 ps0<-subset_taxa(ps, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized") ) #this command subsets the phyloseq object eliminating the ambigously annotated phylaa                                                                     
 summary(taxa_sums(ps0)) #lets see how the summary of them has changed
-sort(table(tax_table(ps0) [, "Phylum"], exclude=NULL))  #now you see we no longer have 
+sort(table(tax_table(ps0) [, "Phylum"], exclude=NULL))  #now you see we no longer have unnasigned phyla
 ```
 
-
-
-
 ##Investigating low prevalence/Abundance phylum and subset them out 
+
+A useful next step is to explore feature prevalence in the dataset, which we will define here as the number of samples in which a taxa appears at least once.
+
+```{r}
+# Compute prevalence of each feature, store as data.frame
+prevdf = apply(X = otu_table(ps0),
+                 MARGIN = ifelse(taxa_are_rows(ps0), yes = 1, no = 2),
+                 FUN = function(x){sum(x > 0)})
+# Add taxonomy and total read counts to this data.frame
+prevdf = data.frame(Prevalence = prevdf,
+                      TotalAbundance = taxa_sums(ps0),
+                      tax_table(ps0))
+
+prevdf
+
+plyr::ddply(prevdf, "Phylum", function(df1){cbind(Mean_Prevalence=mean(df1$Prevalence),Sum_Prevalence=sum(df1$Prevalence))})
+```
+```{r}
+
+ps0
+
+
+```
 
 ```{r}
 #First we generate a prevalence table
@@ -383,27 +407,6 @@ plyr::ddply(prevelancedf, "Phylum", function(df1){
   data.frame(mean_prevalence=mean(df1$Prevalence),sum_prevalence=sum(df1$Prevalence),total_abundance=sum(df1$TotalAbundance,na.rm = T),stringsAsFactors = F)})
 ```
 
-
-```{r}
-
-
-# Compute prevalence of each feature, store as data.frame
-prevdf = apply(X = otu_table(ps0),
-                 MARGIN = ifelse(taxa_are_rows(ps0), yes = 1, no = 2),
-                 FUN = function(x){sum(x > 0)})
-# Add taxonomy and total read counts to this data.frame
-prevdf = data.frame(Prevalence = prevdf,
-                      TotalAbundance = taxa_sums(ps0),
-                      tax_table(ps0))
-
-plyr::ddply(prevdf, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
-```
-```{r}
-
-ps0
-
-
-```
 
 
 #We will filter the samples with very low frequency reads (>5) 
