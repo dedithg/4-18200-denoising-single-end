@@ -397,39 +397,34 @@ phyla2filter = c("Acidobacteria", "Armatimonadetes", "Chlamydiae", "Gemmatimonad
 #Filter entries with phylums included in the list we made
 ps1=subset_taxa(ps0, !Phylum %in% phyla2filter)
 
-
+ps0
 ps1
+
 
 hist(sample_sums(ps1), main="Histogram: Read Counts", xlab="Total Reads", 
      border="blue", col="green", las=1, breaks=12)
 
+summary(taxa_sums(ps0))
 summary(taxa_sums(ps1))
 ```
 We now have a phyloseq object with only 3405 taxa/tips (instead of 3419)
 
 ```{r}
 summary(taxa_sums(ps0))
-ps0<-prune_taxa(taxa_sums(ps0)>0, ps0)
-summary(taxa_sums(ps0))
+ps1<-prune_taxa(taxa_sums(ps1)>0, ps1)
+summary(taxa_sums(ps1))
 ```
 ```{r}
-ps0
+ps1
 ```
 
-
+we can add the total reads to our latest phyloseq object ps1
 ```{r}
-metadata$total_reads <- sample_sums(ps0)
+
+sample_data(ps1)$total_reads <- sample_sums(ps1)
+head(sample_data(ps1))
+
 ```
-
-
-
-
-
-
-
-
-
-
 
 ## Data summary and assessment
 
@@ -445,37 +440,42 @@ Begin by running the following R chunk to produce ASV summary plots
 
 ```{r data-assessment}
 # Create a new data frame of the sorted row sums, a column of sorted values from 1 to the total number of individuals/counts for each ASV and a categorical variable stating these are all ASVs.
-readsumsdf <- data.frame(nreads = sort(taxa_sums(ps0), decreasing = TRUE), 
-                        sorted = 1:ntaxa(ps0),
+readsumsdf <- data.frame(nreads = sort(taxa_sums(ps1), decreasing = TRUE), 
+                        sorted = 1:ntaxa(ps1),
                         type = "ASVs")
 # Make a data frame with a column for the read counts of each sample for histogram production
-sample_sum_df <- data.frame(sum = sample_sums(ps0))
+sample_sum_df <- data.frame(sum = sample_sums(ps1))
 # Make plots
 # Generates a bar plot with # of reads (y-axis) for each taxa. Sorted from most to least abundant
 # Generates a second bar plot with # of reads (y-axis) per sample. Sorted from most to least
 p.reads = ggplot(readsumsdf, aes(x = sorted, y = nreads)) +
   geom_bar(stat = "identity") +
-  ggtitle("ASV Assessment") +
+  ggtitle("\n ASV Assessment") +
   scale_y_log10() +
   facet_wrap(~type, scales = "free") +
   ylab("# of Sequences")
 # Histogram of the number of Samples (y-axis) at various read depths
 p.reads.hist <- ggplot(sample_sum_df, aes(x = sum)) + 
   geom_histogram(color = "black", fill = "firebrick3", binwidth = 150) +
-  ggtitle("Distribution of sample sequencing depth") + 
+  ggtitle("Distribution of sample \n sequencing depth") + #, subtitle = "Sample sequencing depth") + 
   xlab("Read counts") +
   ylab("# of Samples")
+
+hist(sample_sums(ps1), main="Histogram: Read Counts", xlab="Total Reads", 
+     border="blue", col="green", las=1, breaks=12)
 # Final plot, side-by-side
 grid.arrange(p.reads, ncol = 1)
 grid.arrange( p.reads.hist, ncol=1)
+
+grid.arrange(p.reads, p.reads.hist, ncol = 2)
 # Basic summary statistics
-summary(sample_sums(ps0))
+summary(sample_sums(ps1))
 ```
 
 The above data assessment is useful for getting an idea of 
 1) the number of sequences per taxa (first plot). This will normally be a "long tail" with some taxa being highly abundant in the data tapering off to taxa with very few reads, 
 
-2) the number of reads per sample (second table). Note the spike at the lowest number of reads due to samples taken from mice given antibiotics. Very low read count can be indicative of a failed reaction. Both of these plots will help give an understanding of how your data are structured across taxa and samples and will vary depending on the nature of your samples.
+2) the number of reads per sample (second table). Very low read count can be indicative of a failed reaction. Both of these plots will help give an understanding of how your data are structured across taxa and samples and will vary depending on the nature of your samples.
 
 Samples with unexpectedly low number of sequences can be considered for removal. This is an intuitive process and should be instructed by your understanding of the samples in your study. For example, if you have 5 samples from stool samples, one would expect to obtain thousands, if not several thousands of ASV. This may not be the case for other tissues, such as spinal fluid or tissue samples. Similarly, you may not expect thousands of ASV from samples obtained from antibiotic treated organisms. Following antibiotic treatment you may be left with only dozens or hundreds of ASV. So contextual awareness about the biology of your system should guide your decision to remove samples based on ASV number.
 
@@ -488,9 +488,9 @@ Detecting and potentially removing samples outliers (those samples with underlyi
 
 ```{r sample-removal-identification}
 # Format a data table to combine sample summary data with sample variable data
-ss <- sample_sums(ps0)
+ss <- sample_sums(ps1)
 head(ss)
-sd <- as.data.frame(sample_data(ps0))
+sd <- as.data.frame(sample_data(ps1))
 head(sd)
 ss.df <- merge(sd, data.frame("ASV" = ss), by ="row.names")
 head(ss.df)
@@ -510,31 +510,38 @@ p.ss.boxplot
 The example data does hot have many samples with fewer than 3,000 ASV other than the sample 5 in the ZT 12 graph. When questionable samples arise you should take note of them so if there are samples which behave oddly in downstream analysis you can recall this information and perhaps justify their removal. In this case lets remove them for practice. 
 
 ```{r sample-outlier-removal}
-nsamples(ps0)
+nsamples(ps1)
 
 #levels(sample_data(ps0)$name)
-ps1 <- subset_samples(ps0, name !="5x3x12")
+ps2 <- subset_samples(ps1, name !="5x3x12")
 
-nsamples(ps1)
+nsamples(ps2)
 ```
 
-Note that we created a new PhyloSeq object called ps1. This preserves all of the data in the original ps0 and creates a new data object with the offending samples removed called ps1.
+Note that we created a new PhyloSeq object called ps2. This preserves all of the data in the original ps1 and creates a new data object with the offending samples removed called ps2.
 
 Failure to detect and remove "bad" samples can make interpreting ordinations much more challenging as they typically project as "outliers" severely skewing the rest of the samples. These samples also increase variance and will impede your ability to identify diferentially abundant taxa between groups. Thus sample outlier removal should be a serious and thoughtful part of every analysis in order to obtain optimal results.
 
 ###Alpha-Diversity 
 
 ```{r}
-head(estimate_richness(ps1))
+head(estimate_richness(ps2))
 ```
 
 ```{r}
 
-(p <- plot_richness(ps, x = "zt_time", color = "sex", measures = c("Observed", "Shannon")))
+(p <- plot_richness(ps, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
 
-p + labs(x = "", y = "Alpha Diversity Measure\n") + 
+(p1 <- plot_richness(ps1, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
+
+(p2 <- plot_richness(ps2, x = "diet_group", color = "sex", measures = c("Observed", "Chao1", "Shannon")))
+
+p + labs(x = "", y = "\nAlpha Diversity Measure (p) \n") + 
   theme_bw()
-
+p1 + labs(x = "", y = "\nAlpha Diversity Measure (p1) \n") + 
+  theme_bw()
+p2 + labs(x = "", y = "\nAlpha Diversity Measure (p2)\n") + 
+  theme_bw()
 
 ```
 ###Beta diversity ordination 
