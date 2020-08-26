@@ -514,6 +514,9 @@ nsamples(ps1)
 
 #levels(sample_data(ps0)$name)
 ps2 <- subset_samples(ps1, name !="5x3x12")
+any(taxa_sums(ps2) == 0)
+ps2<-prune_taxa(taxa_sums(ps2)>0, ps2)
+any(taxa_sums(ps2) == 0)
 
 nsamples(ps2)
 ```
@@ -529,20 +532,24 @@ The following R chunk removes taxa not-typically part of a bacterial microbiome 
 # Some examples of taxa you may not want to include in your analysis
 get_taxa_unique(ps2, "Kingdom")
 get_taxa_unique(ps2, "Class")
-ps1 # Check the number of taxa prior to removal
-ps2 <- ps1 %>%
+ps2 # Check the number of taxa prior to removal
+ps3 <- ps2 %>%
   subset_taxa(
     Kingdom == "Bacteria" #&
     #Family  != "mitochondria" &
     #Class   != "Chloroplast" &
     #Phylum != "Cyanobacteria/Chloroplast"
 )
-ps2 # Confirm that the taxa were removed
-get_taxa_unique(ps1, "Kingdom")
-get_taxa_unique(ps2, "Kingdom")
+ps3 # Confirm that the taxa were removed
+any(taxa_sums(ps3) == 0) #check if there are any taxa left that do not belong to any samples
+ps3<-prune_taxa(taxa_sums(ps3)>0, ps3) #prune the left over taxa
+any(taxa_sums(ps3) == 0) #confirm they have been removed 
 
-get_taxa_unique(ps1, "Class")
+get_taxa_unique(ps2, "Kingdom")
+get_taxa_unique(ps3, "Kingdom")
+
 get_taxa_unique(ps2, "Class")
+get_taxa_unique(ps3, "Class")
 
 ```
 
@@ -557,12 +564,12 @@ While the ultimate selection criteria can still be subjective, the following plo
 ```{r prevalence-assessment}
 # Prevalence estimation
 # Calculate feature prevalence across the data set
-prevdf <- apply(X = otu_table(ps2),MARGIN = ifelse(taxa_are_rows(ps2), yes = 1, no = 2),FUN = function(x){sum(x > 0)})
+prevdf <- apply(X = otu_table(ps3),MARGIN = ifelse(taxa_are_rows(ps3), yes = 1, no = 2),FUN = function(x){sum(x > 0)})
 # Add taxonomy and total read counts to prevdf
-prevdf <- data.frame(Prevalence = prevdf, TotalAbundance = taxa_sums(ps2), tax_table(ps2))
+prevdf <- data.frame(Prevalence = prevdf, TotalAbundance = taxa_sums(ps3), tax_table(ps3))
 #Prevalence plot
-prevdf1 <- subset(prevdf, Phylum %in% get_taxa_unique(ps0, "Phylum"))
-p.prevdf1 <- ggplot(prevdf1, aes(TotalAbundance, Prevalence / nsamples(ps2),color=Family)) +
+prevdf1 <- subset(prevdf, Phylum %in% get_taxa_unique(ps3, "Phylum"))
+p.prevdf1 <- ggplot(prevdf1, aes(TotalAbundance, Prevalence / nsamples(ps3),color=Family)) +
   geom_hline(yintercept = 0.01, alpha = 0.5, linetype = 2) +
   geom_point(size = .5, alpha = 0.7) +
   scale_x_log10() +
@@ -596,6 +603,9 @@ ntaxa(ps2)
 ps2.prev <- prune_taxa(keepTaxa, ps2)
 ntaxa(ps2.prev)
 ```
+
+
+###TAXA AGGLOMERATION 
 
 Because  agglomerate taxa at the Genus level (combine all with the same name) and remove all taxa without genus level assignment
 
