@@ -382,7 +382,7 @@ prevdf = data.frame(Prevalence = prevdf,
 
 prevdf
 
-plyr::ddply(prevdf, "Phylum", function(df1){cbind(Mean_Prevalence=mean(df1$Prevalence),Sum_Prevalence=sum(df1$Prevalence))})
+plyr::ddply(prevdf, "Phylum", function(df1){cbind(Mean_Prevalence=mean(df1$Prevalence),Sum_Prevalence=sum(df1$Prevalence), Total_Abundance=sum(df1$TotalAbundance))})
 ```
 ```{r}
 
