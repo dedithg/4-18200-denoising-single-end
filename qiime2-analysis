@@ -1,77 +1,145 @@
+#Author: Diana E. Gutierrez
+#Date: 08/27/2020
+#Objective: analyze
+#Software: qiime2
+#Environment version: qiime2-2020.6
+
+#####################################
+# TIMED FEEDING MICROBIOME ANALYSIS #
+#####################################
+
+#This file contains the workflow used to analyze the microbiome data from week
+#13 obtained from cohort 1 of the timed feeding experiment at the Bray lab
+
+######## WARNING: this workflow is written for this dataset only, you can use it
+######## as a guide for future analysis but it is not meant to be applied for
+######## any and all datasets. Please get familiarized with the QIIME2 Software
+######## by reading/following the extensive docummentation in the qiime2 website
+######## IN DETAIL before attempting to run this workflow.
+
+#To install qiime2 in your computer follow the instructions on the software
+#documentation website. This workflow skips those steps and starts by initating
+#the program
+
+# To initiate the program activate the QIIME2 environment using conda
+
+conda activate qiime2-2020.6
+
+#The current installation instructions as of 08/27/2020 generate another qiime2
+#environment version qiime2-2020.8 the syntax is slightly different from the
+#one on the version I used when running this analysis so if any commands do not
+#work check the help message that will show up and correct the commands
+
 #Import the data to a qiime2 artifact
-#The tf_manifest.tsv file contains the sampleid and absolute paths to the forward and reverse reads for that specific sampleid
-#it will generate the file paired-end-demux.qza which is a qiime artifact that you will use in the rest of the analysis
+#####################################
+#The manifest_single.tsv file contains the sampleid and ABSOLUTE PATHS to the
+#forward reads for that specific sampleid it will generate the file
+#single-end-demux.qza which is a qiime artifact that you will use in the rest
+# of the analysis
+
+#navigate to the timedfeeding folder, from here run the following code
+
+            qiime tools import \
+                --type 'SampleData[SequencesWithQuality]' \
+                --input-path 4-18200-denoise-single-end/metadata/manifest_single.tsv \
+                --output-path 3-single_data_import/single-end-demux.qza \
+                --input-format SingleEndFastqManifestPhred33V2
+
+#We can summarize the demultiplexed samples to look at their quality. (in our
+#case we had already demultiplexed samples so this step didn't really do anything
+#else but import the actual samples, but it is still good to summarize them)
+
+            qiime demux summarize \
+                --i-data 3-single_data_import/single-end-demux.qza \
+                --o-visualization 3-single_data_import/single-end-demux.qzv
+##  Question
+##  After "demultiplexing", which sample has the lowest sequencing depth?
+#   Samples at 4 am are the ones that have the lowest sequencing depth.
 
 
-              qiime tools import \
-                --type 'SampleData[PairedEndSequencesWithQuality]' \
-                --input-path tf_manifest.tsv \
-                --output-path paired-end-demux.qza \
-                --input-format PairedEndFastqManifestPhred33V2
-
-FIRST WE WILL CHECK THE SEQUENCES AND SEQUENCING DEPTH OF THE
-SAMPLES USING THE qiime demux summarize COMMAND.
-
-              qiime demux summarize \
-                --i-data paired-end-demux.qza \
-                --o-visualization demux-tf-all.qzv
-
-    ##  Question
-    ##  After demultiplexing, which sample has the lowest sequencing depth?
-    Samples at 4 am are the ones that have the lowest sequencing depth.
-
-    18x1x4 has the lowest sequencing depth with 954 reads
-    Median - 120924
-    Mean - 133123
-    MAX - 407369
+#    18x1x4 has the lowest sequencing depth with 954 reads
+#    Median - 120924
+#    Mean - 133123
+#    MAX - 407369
 
     ##  What is the median sequence length?
-    120924
+#    120924
 
     ##  What is the median quality score at position 125?
-    38, any quality score higher than 20 represents 99% probability that the read
-    is correct
+#    38, any quality score higher than 20 represents 99% probability that the read
+#    is correct
 
-    Phred Quality
-    Score
-          Probability of Incorrect Base Call Base Call Accuracy
-    10    1 in 10 90%
-    20    1 in 100 99%
-    30    1 in 1,000 99.9%
-    40    1 in 10,000 99.99%
-    50    1 in 100,000 99.999%
+#    Phred Quality
+#    Score
+#          Probability of Incorrect Base Call Base Call Accuracy
+#    10    1 in 10 90%
+#    20    1 in 100 99%
+#    30    1 in 1,000 99.9%
+#    40    1 in 10,000 99.99%
+#    50    1 in 100,000 99.999%
 
 #Clicking on the "interactive Quality Plot" we can explore the quality of the data
 #from the forward reads is pretty stable throughout the length of the fragments,
 #on the other had the reverse reads are
 
-
-
-
 #QIIME2 UTILIZES DADA2 FOR QUALITY CONTROL AND APPLIES THE QUALITY CONTROL STEP
-#BEFORE THE MERGING OF THE SEQUENCES, COMPARED TO QIIME WHICH RESULTS IN A HIGHER
-#NUMBER OF SEQUENCES MERGED. I LOOKED AT THE LITERATURE AND EVIDENCE SUGGESTS
-# THAT A GOOD THRESHOLD TO USE WHEN TRIMMING PAIR-END SEQUENCES USING DADA2 IN
+#BEFORE THE MERGING OF THE SEQUENCES (in the case of pair-end sequences),
+# COMPARED TO QIIME WHICH RESULTS IN A HIGHER NUMBER OF SEQUENCES MERGED.
+
+#I LOOKED AT THE LITERATURE AND EVIDENCE SUGGESTS THAT:
+#A GOOD THRESHOLD TO USE WHEN TRIMMING PAIR-END SEQUENCES USING DADA2 IN
 #QUIIME2 IS 18. (see reference:  Mohsen, Attayeb, et al. "Impact of quality
 #trimming on the efficiency of reads joining and diversity analysis of Illumina
 #paired-end reads in the context of QIIME1 and QIIME2 microbiome analysis
 #frameworks." BMC bioinformatics 20.1 (2019): 1-10.)
 
-#to denoise the samples we will use two parameters:
+##########################
+##FORWARD READS ANALYSIS##
+##########################
+
+#Because of the low quality of the reverse reads of the sequencing data we
+#have decided to only use the forward reads and because of that we will use the
+#single-end denoising method.
+
+            qiime dada2 denoise-single \
+                  --i-demultiplexed-seqs 3-single_data_import/single-end-demux.qza \
+                  --p-trim-left 18 \
+                  --p-trunc-len 200 \
+                  --o-representative-sequences  4-18200-denoise-single-end/rep-seqs.qza \
+                  --o-table  4-18200-denoise-single-end/table.qza \
+                  --o-denoising-stats  4-18200-denoise-single-end/stats.qza
+
+#This step took 6 hours for paired end reads and around one hour for single end reads!!!
+
+#We summarize the feature table
+
+                  qiime feature-table summarize \
+                    --i-table table.qza \
+                    --o-visualization table.qzv \
+                    --m-sample-metadata-file metadata_all_categorical.tsv
+
+#Tabulate the sequences and we can see using the visualization the frequency of
+#each sequence we have in the samples
+
+                  qiime feature-table tabulate-seqs \
+                     --i-data rep-seqs.qza \
+                     --o-visualization rep-seqs.qzv
+
+                  qiime metadata tabulate \
+                      --m-input-file q2_artfcts/stats.qza \
+                      --o-visualization q2_vis/denoising-stats.qzv
+
+#We can create a phylogeny tree
+                  qiime phylogeny align-to-tree-mafft-fasttree \
+                      --i-sequences q2_artfcts/rep-seqs.qza  \
+                      --o-alignment q2_artfcts/aligned-rep-seqs.qza   \
+                      --o-masked-alignment q2_artfcts/masked-aligned-rep-seqs.qza  \
+                      --o-tree q2_artfcts/unrooted-tree.qza   \
+                      --o-rooted-tree q2_artfcts/rooted-tree.qza
 
 
-#18 to see what the "correct trimming variable looks like"
-    qiime dada2 denoise-paired \
-      --i-demultiplexed-seqs 3-data_import/paired-end-demux.qza \
-      --p-trim-left-f 18 \
-      --p-trim-left-r 18 \
-      --p-trunc-len-f 240 \
-      --p-trunc-len-r 160 \
-      --o-table 4-denoise-18-18-240-160/table.qza \
-      --o-representative-sequences 4-denoise-18-18-240-160/rep-seqs.qza \
-      --o-denoising-stats 4-denoise-18-18-240-160/denoising-stats.qza
 
-#This step took 6 hours!!!
+
 
 
 #After denoising you should have artifacts containing the feature table, feature
@@ -104,7 +172,11 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 ########### FILTER DATA ###################
 
 ##To filter all baseline samples
-qiime feature-table filter-samples   --i-table table.qza  --m-metadata-file metadata_all_categorical.tsv   --p-where "[week_name]='Week 13'"   --o-filtered-table 13-fil-table.qza
+qiime feature-table filter-samples \
+  --i-table table.qza \
+  --m-metadata-file metadata_all_categorical.tsv \
+  --p-where "[week_name]='Week 13'"  \
+  --o-filtered-table w13-fil-table.qza
 
 
 ##Filter animal 13
