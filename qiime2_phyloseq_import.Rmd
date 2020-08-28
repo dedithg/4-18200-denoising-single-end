@@ -535,10 +535,10 @@ get_taxa_unique(ps2, "Class")
 ps2 # Check the number of taxa prior to removal
 ps3 <- ps2 %>%
   subset_taxa(
-    Kingdom == "Bacteria" #&
-    #Family  != "mitochondria" &
-    #Class   != "Chloroplast" &
-    #Phylum != "Cyanobacteria/Chloroplast"
+    Kingdom == "Bacteria" &
+    Family  != "mitochondria" &
+    Class   != "Chloroplast" &
+    Phylum != "Cyanobacteria/Chloroplast"
 )
 ps3 # Confirm that the taxa were removed
 any(taxa_sums(ps3) == 0) #check if there are any taxa left that do not belong to any samples
@@ -552,6 +552,60 @@ get_taxa_unique(ps2, "Class")
 get_taxa_unique(ps3, "Class")
 
 ```
+
+Check the distributions of how many reads per sample
+
+```{r}
+SeqDepth = colSums(otu_table(ps3))
+sample_data(ps3)$SeqDepth = SeqDepth
+qplot(log10(SeqDepth), geom = "histogram") + theme_bw()
+```
+
+```{r}
+# We use the main variable here of interest Diet group
+
+ggplot(meta(ps3)) +
+    geom_histogram(aes(x = log10(SeqDepth)), alpha= 0.6) + facet_wrap(~diet_group) + theme_bw()
+```
+
+```{r}
+head(meta(ps3))
+ggbarplot(meta(ps3), "name", "SeqDepth", fill = "diet_group") + rotate_x_text()
+ggbarplot(meta(ps3), "name", "SeqDepth", fill = "sex") + rotate_x_text()
+```
+It is obvious that there is a difference in sample depth by diet group and we should keep this in mind for downstream analysis
+```{r}
+summarize_phyloseq(ps3)
+```
+
+We have data which is not relative abundance, only counts in our case. sparsity is how populated is the data with zeros. We have removed singletons because we have no interest in low abunce samples. 
+
+We can check the distribution of AVSs 
+
+```{r}
+hist(log10(taxa_sums(ps3)))
+```
+The data is left tailed. Common for microbiome count data. We can also look at how prevalent are OTUs.
+
+```{r}
+prev.otu <- plot_taxa_prevalence(ps3, "Phylum")
+
+print(prev.otu)
+```
+
+####DIVERSITY 
+
+Of specific interest is the diversity of microbial communities between the diet groups. First we will calculate eveness. We will use un
+
+
+
+
+
+
+
+
+
+
 
 ## Prevalance assessment
 
@@ -594,67 +648,142 @@ An example on how to filter low prevalent taxa is below.
 #get_taxa_unique(ps2.prev, "Phylum")
 # Removing taxa that fall below 5% prevelance
 # Define the prevalence threshold
-prevalenceThreshold = 0.01 * nsamples(ps2)
+prevalenceThreshold = 0.05 * nsamples(ps3)
 prevalenceThreshold
 # Define which taxa fall within the prevalence threshold
 keepTaxa <- rownames(prevdf1)[(prevdf1$Prevalence >= prevalenceThreshold)]
-ntaxa(ps2)
+ntaxa(ps3)
 # Remove those taxa
-ps2.prev <- prune_taxa(keepTaxa, ps2)
-ntaxa(ps2.prev)
+ps3.prev <- prune_taxa(keepTaxa, ps3)
+ntaxa(ps3.prev)
+any(taxa_sums(ps3.prev) == 0) #check that they have been removed 
 ```
-
-
-###TAXA AGGLOMERATION 
-
-Because  agglomerate taxa at the Genus level (combine all with the same name) and remove all taxa without genus level assignment
+####Plot richness
 
 ```{r}
-#We can do it using a taxonomic method 
+plot_richness(ps,  x  ="sex",  color  = "sex") #this will show you all the alpha diversity metrics possible 
 
-# How many genera would be present after filtering?
-length(get_taxa_unique(ps2, taxonomic.rank = "Genus"))
-## [1] 49
-ps3 = tax_glom(ps2.prev, "Genus", NArm = TRUE)
-
-sum(colSums(otu_table(ps3)))
 ```
 
 ```{r}
-#Or by determining a tree hight at which you want to conglomerate the measures 
+#You can select to view just some of them 
 
-h1 = 0.4
-ps4 = tip_glom(ps2.prev, h = h1)
-sum(colSums(otu_table(ps4)))
+plot_richness(ps,  measures = c("Chao1", "Shannon"),x = "sex", color
+= "diet_group")
 
 ```
 
-We can generate a tree picture from each method and compare it to the previous tree "Before Agglomeration"
+You can use bar plots too
 
 ```{r}
-multiPlotTitleTextSize = 15
-p2tree = plot_tree(ps2, method = "treeonly",
-                   ladderize = "left",
-                   title = "Before Agglomeration") +
-  theme(plot.title = element_text(size = multiPlotTitleTextSize))
-p3tree = plot_tree(ps3, method = "treeonly",
-                   ladderize = "left", title = "By Genus") +
-  theme(plot.title = element_text(size = multiPlotTitleTextSize))
-p4tree = plot_tree(ps4, method = "treeonly",
-                   ladderize = "left", title = "By Height") +
-  theme(plot.title = element_text(size = multiPlotTitleTextSize))
-# group plots together
-grid.arrange(nrow = 1, p2tree, p3tree, p4tree)
+TopNGenus <- names(sort(taxa_sums(ps), TRUE)[1:5])
+Top5Genus<-prune_taxa(TopNGenus, ps)
+
+plot_bar(Top5Genus, fill="Phylum",facet_grid=~sex)
+
 ```
+
+You can use heatmaps
+```{r}
+plot_heatmap(ps3.prev, method = "NMDS", distance ="bray", sample.label = NULL, taxa.label = NULL, low = "#000033", high = "#66CCFF", na.value = "black")
+
+plot_heatmap(Top5Genus, fill="Genus",facet_grid=~sex)
+plot_heatmap(Top5Genus, "PCoA", "bray")
+
+
+#Maybe here I need to subset the samples by diet group and then order them 
+
+```
+
+
+```{r}
+plot_tree(ps3.prev, ladderize="left",color = "sex")
+
+plot_tree(ps3.prev,color= "sex", shape = "sex", ladderize = "left")+ coord_polar (theta = "y")
+
+```
+
+#####Clustering
+Clustering and ordination are two main classes of multivariate methods that microbiome researchers and community ecologists employ. Clustering seeks to put samples into "classes" to reduce the complexity (dimensionality) of data. Ordination reduces mutidimensional community data to two or three dimensions. Many methods have been developed based on ordination in ecological studies. In order to cluster or ordinate a community, a distance measure needs to be provided by a distance method. 
+
+First lets normalize the abundance table using the funciton decostand() and calculate the Bray-Curtis dissimilarities between all pairs of samples using the function vegdist() from the vegan package. 
+
+```{r}
+
+
+
+
+```
+
+
+
+
+
+
+
+###Exporting into QIIME2
+
+```{r}
+tax<-as(tax_table(ps3.prev),"matrix")
+tax_cols <- colnames(tax)
+tax<-as.data.frame(tax)
+tax$taxonomy<-do.call(paste, c(tax[tax_cols], sep=";"))
+for(co in tax_cols) tax[co]<-NULL
+write.table(tax, "tax.txt", quote=FALSE, col.names=FALSE, sep="\t")
+```
+
+
+```{r}
+# Export feature/OTU table
+
+# As a biom file
+
+library(biomformat);packageVersion("biomformat")
+## [1] ‘1.6.0’
+
+otu<-t(as(otu_table(ps3.prev),"matrix")) # 't' to transform if taxa_are_rows=FALSE
+#if taxa_are_rows=TRUE
+#otu<-as(otu_table(GlobalPatterns),"matrix"))
+otu_biom<-make_biom(data=otu)
+write_biom(otu_biom,"otu_biom.biom")
+
+# As a text file
+
+#write.table(t(seqtab), "seqtab.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+#or from the phyloseq object, 't' to transform if taxa_are_rows=FALSE, no 't' if taxa_are_rows=TRUE
+#write.table(t(otu_table(ps), "seqtab.txt",sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+
+# Export metadata (if you have a properly formatted metadata file that you imported in your phyloseq pipeline, you can skip this step and just use that text file directly in QIIME 2)
+
+write.table(sample_data(ps3.prev),"sample-metadata.txt", sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####Abundance value transformation
 
 It is usually necessary to transform microbiome count data to account for differences in library size, variance, scale, etc. The phyloseq package provides a flexible interface for defining new functions to accomplish these transformations of the abundance values via the function transform_sample_counts(). The first argument to this function is the phyloseq object you want to transform, and the second argument is an R function that defines the transformation. The R function is applied sample-wise, expecting that the first unnamed argument is a vector of taxa counts in the same order as the phyloseq object. Additional arguments are passed on to the function specified in the second argument, providing an explicit means to include pre-computed values, previously defined parameters/thresholds, or any other object that might be appropriate for computing the transformed values of interest.
 
 This example begins by defining a custom plot function, plot_abundance(), that uses phyloseq’s function to define a relative abundance graphic. We will use this to compare more easily differences in scale and distribution of the abundance values in our phyloseq object before and after transformation.
+
+###Bacteroidetes
 ```{r}
 plot_abundance = function(physeq,title = "",
                           Facet = "Order", Color = "sex"){
   # Arbitrary subset, based on Phylum, for plotting
-  p1f = subset_taxa(ps2.prev, Phylum %in% c("Firmicutes"))
+  p1f = subset_taxa(ps3.prev, Phylum %in% c("Bacteroidetes"))
   mphyseq = psmelt(p1f)
   mphyseq <- subset(mphyseq, Abundance > 0)
   ggplot(data = mphyseq, mapping = aes_string(x = "sex",y = "Abundance",
@@ -669,51 +798,28 @@ plot_abundance = function(physeq,title = "",
 The transformation in this case converts the counts from each sample into their frequencies, often referred to as proportions or relative abundances. This function is so simple that it is easiest to define it within the function call to transform_sample_counts().
 ```{r}
 # Transform to relative abundance. Save as new object.
-ps2ra = transform_sample_counts(ps2.prev, function(x){x / sum(x)})
+ps3ra = transform_sample_counts(ps3.prev, function(x){x / sum(x)})
 ```
 Now we plot the abundance values before and after transformation.
 
 ```{r}
-plotBefore = plot_abundance(ps2,"")
-plotAfter = plot_abundance(ps2ra,"")
+plotBefore = plot_abundance(ps3,"")
+plotAfter = plot_abundance(ps3ra,"")
 # Combine each plot into one graphic.
 grid.arrange(nrow = 2,  plotBefore, plotAfter)
 ```
-```{r}
-psOrd = subset_taxa(ps2ra, Order == "Bacillales")
-plot_abundance(psOrd, Facet = "Family", Color = NULL)
-```
 
-Do some simple ordination looking for outlier samples, first we variance stabilize the data with a log transform, the perform PCoA using bray’s distances
 
 ```{r}
-logt  = transform_sample_counts(ps3, function(x) log(1 + x) )
-out.pcoa.logt <- ordinate(logt, method = "PCoA", distance = "bray")
-evals <- out.pcoa.logt$values$Eigenvalues
-plot_ordination(logt, out.pcoa.logt, type = "samples", 
-                color = "diet_group", shape = "sex") + labs(col = "zt_time") +
-  coord_fixed(sqrt(evals[2] / evals[1]))
-
+psOrd = subset_taxa(ps3ra, Order == "Bacteroidales")
+plot_abundance(psOrd, Facet = "Genus", Color = "sex")
 ```
 
-To generate a heatmaap 
+###### STATISTICAL ANALYSIS 
 
-```{r}
- plot_heatmap(ps3, method = "NMDS", distance = "bray")
-```
-its too cluttered so we should only count the most abundant AVSs
+At this stage in the workflow, after converting raw reads to interpretable species abundances, and after filtering and transforming these abundances to focus attention on scientifically meaningful quantities, we are in a position to consider more careful statistical analysis. R is an ideal environment for performing these analyses, as it has an active community of package developers building simple interfaces to sophisticated techniques. As a variety of methods are available, there is no need to commit to any rigid analysis strategy a priori. Further, the ability to easily call packages without reimplementing methods frees researchers to iterate rapidly through alternative analysis ideas. The advantage of performing this full workflow in R is that this transition from bioinformatics to statistics is effortless.
 
-```{r}
- total = median(sample_sums(ps3))
-  ps3_abund <- filter_taxa(ps3, function(x) sum(x > total*0.20) > 0, TRUE)
-  ps3_abund
-  
-    plot_heatmap(ps3_abund, method = "NMDS", distance = "bray")
-
-```
-
-
-
+Let’s start by installing a few packages that are available for these complementary analyses:
 
 ```{r}
 .cran_packages <- c( "shiny","miniUI", "caret", "pls", "e1071", "ggplot2", "randomForest", "dplyr", "ggrepel", "nlme", "devtools",
@@ -731,12 +837,72 @@ if (any(!.inst)){
   devtools::install_github(.github_packages[!.inst])
 }
 
+BiocManager::install(c("biocLite"))
 .inst <- .bioc_packages %in% installed.packages()
-if(any(!.inst)){
-  source("http://bioconductor.org/biocLite.R")
-  biocLite(.bioc_packages[!.inst])
-}
+#if(any(!.inst)){
+#  source("http://bioconductor.org/biocLite.R")
+ # biocLite(.bioc_packages[!.inst])
+#}
+
 ```
 
 
+```{r}
+qplot(log10(rowSums(otu_table(ps3.prev))),binwidth=0.2) +
+  xlab("Logged counts-per-sample")
+```
+The histogram in the figure above suggests that a log(1+x) transformation might be sufficient for normalizing the abundance data for the exploratory analyses.
+
+```{r}
+ps3log <- transform_sample_counts(ps3, function(x) log(1 + x))
+out.wuf.log <- ordinate(ps3log, method = "MDS", distance = "wunifrac")
+evals <- out.wuf.log$values$Eigenvalues
+plot_ordination(ps3log, out.wuf.log, color = "diet_group", shape = "sex") +
+  labs(col = "Diet Group") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+```
+```{r}
+out.pcoa.log <- ordinate(ps3log,  method = "MDS", distance = "bray")
+evals <- out.pcoa.log$values[,1]
+plot_ordination(ps3log, out.pcoa.log, color = "sex", shape = "diet_group") + stat_ellipse()+
+  labs(col = "Sex", shape = "Diet group")+
+  coord_fixed(sqrt(evals[2] / evals[1])) 
+```
+Double principal coordinates analysis
+
+```{r}
+out.dpcoa.log <- ordinate(ps3log, method = "DPCoA")
+evals <- out.dpcoa.log$eig
+plot_ordination(ps3log, out.dpcoa.log, color = "diet_group", label= "names",
+                  shape = "sex") +
+  labs(col = "Diet Group", shape = "Sex")+
+  coord_fixed(sqrt(evals[2] / evals[1]))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Do some simple ordination looking for outlier samples, first we variance stabilize the data with a log transform, the perform PCoA using bray’s distances
+
+```{r}
+logt  = transform_sample_counts(ps3ra, function(x) log(1 + x) )
+out.pcoa.logt <- ordinate(logt, method = "PCoA", distance = "Bray")
+evals <- out.pcoa.logt$values$Eigenvalues
+plot_ordination(logt, out.pcoa.logt, type = "samples", 
+                color = "sex", shape = "diet_group") + labs(col = "Diet Group") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+
+
+```
 
