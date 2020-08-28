@@ -171,24 +171,61 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 
 ########### FILTER DATA ###################
 
+#First we will apply metadata filtering methods because we know we don't
+#want to focus on all samples
+
 ##To filter all baseline samples
 qiime feature-table filter-samples \
-  --i-table table.qza \
-  --m-metadata-file metadata_all_categorical.tsv \
+  --i-table q2_artfcts/table.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
   --p-where "[week_name]='Week 13'"  \
-  --o-filtered-table w13-fil-table.qza
+  --o-filtered-table q2_artfcts/filtered/w13-fil-table.qza
 
+##Filter animal 13 because we excluded it from the total metabolic analysis
+qiime feature-table filter-samples \
+  --i-table q2_artfcts/filtered/w13-fil-table.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --p-where "[animal_id]!=13" \
+  --o-filtered-table q2_artfcts/13all-fil-table.qza
 
-##Filter animal 13
-qiime feature-table filter-samples   --i-table 13-fil-table.qza  --m-metadata-file metadata_all_categorical.tsv   --p-where "[animal_id]!=13"   --o-filtered-table fil_an13/13-fil-table.qza
-
-qiime feature-table filter-samples   --i-table table.qza  --m-metadata-file metadata_all_categorical.tsv   --p-where "[animal_id]!=13 AND [week_name]='Week 13'"   --o-filtered-table 13-fil-table.qza
+#You could also use the following code to filter both at the same time
+qiime feature-table filter-samples --i-table q2_artfcts/table.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --p-where "[animal_id]!=13 AND [week_name]='Week 13'" \
+  --o-filtered-table q2_artfcts/filtered/13all-fil-table.qza
 
 
 ########## SUMMARIZE THE TABLE ###########
 
-## filtered baseline week
-qiime feature-table summarize --i-table 13-fil-table.qza --o-visualization 13-table.qzv --m-sample-metadata-file metadata_all_categorical.tsv
+## Filtered baseline and animal 13 samples
+qiime feature-table summarize --i-table q2_artfcts/filtered/13all-fil-table.qza \
+ --o-visualization q2_vis/13all-fil-table.qzv --m-sample-metadata-file metadata/metadata_all_categorical.tsv
+
+#####OVERVIEW
+# We can see in the visualizetion that we are left with only 178 samples that
+# have a total of 3,938 features.
+# We can also see that some of the features have a frequency of 2, 3 or 5 reads
+
+#####INTERACTIVE SAMPLE DETAIL
+# Looking at the interactive sample detail we can see that we are missing some
+# samples from animal 16 and 23, and that we have one outlier sample that has
+# very low number of features compared to the rest of the samples.
+
+#If you change the metadata category to zt_time you can see that the samples we
+#are missing both belong to zt_time 4. Changing it to sex we can see that we
+#have less samples from females, this is because animal 13 which we filtered
+#in the previous step is a female.
+
+#If we look at the Feature Detail tab we can see that there are multiple Samples
+#that are present in low frequency are present in only one sample.
+
+# All of this information can be used to filter low abundance taxa that would
+# not really affect the composition of the community and also may be a results
+#of requencing error
+
+#Before we continue with the analysis we will conduct some taxonomic and
+#prevance filtering:
+
 
 
 
