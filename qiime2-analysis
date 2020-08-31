@@ -194,6 +194,15 @@ qiime feature-table filter-samples --i-table q2_artfcts/table.qza \
   --p-where "[animal_id]!=13 AND [week_name]='Week 13'" \
   --o-filtered-table q2_artfcts/filtered/13all-fil-table.qza
 
+#Every time we filter samples we need to remember to filter the feature sequences
+#that were on those samples, to do this we use:
+
+qiime feature-table filter-seqs \
+    --i-data q2_artfcts/rep-seqs.qza \
+    --i-table q2_artfcts/filtered/13all-fil-table.qza \
+    --o-filtered-data q2_artfcts/filtered/13all-fil-rep-seqs.qza
+
+
 
 ########## SUMMARIZE THE TABLE ###########
 
@@ -216,6 +225,7 @@ qiime feature-table summarize --i-table q2_artfcts/filtered/13all-fil-table.qza 
 #have less samples from females, this is because animal 13 which we filtered
 #in the previous step is a female.
 
+######FEATURE DETAIL
 #If we look at the Feature Detail tab we can see that there are multiple Samples
 #that are present in low frequency are present in only one sample.
 
@@ -223,110 +233,311 @@ qiime feature-table summarize --i-table q2_artfcts/filtered/13all-fil-table.qza 
 # not really affect the composition of the community and also may be a results
 #of requencing error
 
-#Before we continue with the analysis we will conduct some taxonomic and
-#prevance filtering:
 
+####### Before taxonomic and prevalence filtering #######
 
+#We will run the full workflow on the samples as they are so we can do some
+#comparison after we have conducted the taxonomic and prevalence filtering
 
+########## 1. CALCULATE CORE DISTANCE METRICS ##############
 
-########## CALCULATE CORE DISTANCE METRICS ##############
+##Without baseline samples and animal 13 Samples
+    qiime diversity core-metrics-phylogenetic \
+        --i-phylogeny q2_artfcts/rooted-tree.qza \
+        --i-table q2_artfcts/filtered/13all-fil-table.qza \
+        --p-sampling-depth 30000 \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --output-dir unfil-core-metrics-results
 
-##Without baseline samples
-      qiime diversity core-metrics-phylogenetic \
-        --i-phylogeny rooted-tree.qza \
-        --i-table 13-fil-table.qza \
-        --p-sampling-depth 3000 \
-        --m-metadata-file metadata_all_categorical.tsv \
-        --output-dir core-metrics-results
-
-##without animal 13 also
-      qiime diversity core-metrics-phylogenetic \
-        --i-phylogeny rooted-tree.qza \
-        --i-table fil_an13/13-fil-table.qza \
-        --p-sampling-depth 3000 \
-        --m-metadata-file metadata_all_categorical.tsv \
-        --output-dir fil_an13/core-metrics-results
-
-
-########### CHECKING ALPHA DIVERSITY ##############
+########### 2. CHECKING ALPHA DIVERSITY ##############
 
 ##Without baseline and animal 13 samples
       qiime diversity alpha-group-significance \
-        --i-alpha-diversity fil_an13/core-metrics-results/faith_pd_vector.qza \
-        --m-metadata-file metadata_all_categorical.tsv \
-        --o-visualization fil_an13/core-metrics-results/faith-pd-group-significance.qzv
+        --i-alpha-diversity unfil-core-metrics-results/faith_pd_vector.qza \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --o-visualization unfil-core-metrics-results/faith-pd-group-significance.qzv
 
-      qiime diversity alpha-group-significance \
-          --i-alpha-diversity fil_an13/core-metrics-results/evenness_vector.qza \
-          --m-metadata-file metadata_all_categorical.tsv \
-          --o-visualization fil_an13/core-metrics-results/evenness-group-significance.qzv
-
-
-##### Beta diversity tests
+########## 3. BETA DIVERSITY TESTING #################
 
 qiime diversity beta-group-significance \
-  --i-distance-matrix fil_an13/core-metrics-results/unweighted_unifrac_distance_matrix.qza \
-  --m-metadata-file metadata_all_categorical.tsv \
+  --i-distance-matrix unfil-core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
   --m-metadata-column cat_zt_time \
-  --o-visualization fil_an13/core-metrics-results/unweighted-unifrac-zttime-significance.qzv \
+  --o-visualization unfil-core-metrics-results/unweighted-unifrac-zttime-significance.qzv \
   --p-pairwise
 
   qiime diversity beta-group-significance \
-    --i-distance-matrix fil_an13/core-metrics-results/unweighted_unifrac_distance_matrix.qza \
-    --m-metadata-file metadata_all_categorical.tsv \
+    --i-distance-matrix unfil-core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+    --m-metadata-file metadata/metadata_all_categorical.tsv \
     --m-metadata-column sex_name \
-    --o-visualization fil_an13/core-metrics-results/unweighted-unifrac-sex-significance.qzv \
+    --o-visualization unfil-core-metrics-results/unweighted-unifrac-sex-significance.qzv \
     --p-pairwise
 
     qiime diversity beta-group-significance \
-      --i-distance-matrix fil_an13/core-metrics-results/unweighted_unifrac_distance_matrix.qza \
-      --m-metadata-file metadata_all_categorical.tsv \
+      --i-distance-matrix unfil-core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
       --m-metadata-column diet_group \
-      --o-visualization fil_an13/core-metrics-results/unweighted-unifrac-diet-significance.qzv \
+      --o-visualization unfil-core-metrics-results/unweighted-unifrac-diet-significance.qzv \
       --p-pairwise
 
-
-qiime emperor plot \
-      --i-pcoa fil_an13/core-metrics-results/unweighted_unifrac_pcoa_results.qza \
-      --m-metadata-file metadata_all_categorical.tsv \
-      --p-custom-axes zt_time \
-      --o-visualization fil_an13/core-metrics-results/unweighted-unifrac-emperor-zttime.qzv
-
-
-#######Visualize Rarefaction################
+########## 4. GENERATE VISUA FOR ALPHA RAREFACTION ################
 
 qiime diversity alpha-rarefaction \
-  --i-table fil_an13/13-fil-table.qza \
-  --i-phylogeny rooted-tree.qza \
+  --i-table q2_artfcts/filtered/13all-fil-table.qza \
+  --i-phylogeny q2_artfcts/rooted-tree.qza \
   --p-max-depth 4000 \
-  --m-metadata-file metadata_all_categorical.tsv \
-  --o-visualization fil_an13/13alpha-4000rarefaction.qzv
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --o-visualization unfil-core-metrics-results/alpha-rarefaction.qzv
 
+######### 5. GENERATE VISUALIZATIONS IN EMPEROR PLOTS FOR BETA DIVERSITY ######
 
-  qiime diversity alpha-rarefaction \
-    --i-table fil_an13/13-fil-table.qza \
-    --i-phylogeny rooted-tree.qza \
-    --p-max-depth 8000 \
-    --m-metadata-file metadata_all_categorical.tsv \
-    --o-visualization fil_an13/13alpha-8000rarefaction.qzv
+#These emperor plot command generates longitudinal plots for beta diversity in
+#our case we will be able to visualize the different 2D maps of the samples over
+#zt_time
 
+qiime emperor plot \
+      --i-pcoa unfil-core-metrics-results/unweighted_unifrac_pcoa_results.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --p-custom-axes zt_time \
+      --o-visualization unfil-core-metrics-results/unweighted-unifrac-emperor-zttime.qzv
 
-#####Sequence classifier Greengenes ############
+######### 6. GENERATE TAXONOMY PLOTS ############
 
 ###first download the classifier
-curl -sL \
-  "https://data.qiime2.org/2020.6/common/gg-13-8-99-515-806-nb-classifier.qza" > \
-  "gg-13-8-99-515-806-nb-classifier.qza"
+#curl -sL \
+#  "https://data.qiime2.org/2020.6/common/gg-13-8-99-515-806-nb-classifier.qza" > \
+#  "gg-13-8-99-515-806-nb-classifier.qza"
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier gg-13-8-99-515-806-nb-classifier.qza \
-  --i-reads rep-seqs.qza \
-  --o-classification taxonomy.qza
+  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza \
+  --i-reads q2_artfcts/filtered/13all-fil-rep-seqs.qza \
+  --o-classification unfil-core-metrics-results/13-all-taxonomy.qza
 
 ###view the taxonomic composition of our samples with interactive bar plots
 
 qiime taxa barplot \
-  --i-table fil_an13/13-fil-table.qza \
-  --i-taxonomy taxonomy.qza \
-  --m-metadata-file metadata_all_categorical.tsv \
-  --o-visualization fil_an13/taxa-bar-plots.qzv
+  --i-table q2_artfcts/filtered/13all-fil-table.qza \
+  --i-taxonomy unfil-core-metrics-results/13-all-taxonomy.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --o-visualization unfil-core-metrics-results/taxa-bar-plots.qzv
+
+#******************************************************************************
+#******************************************************************************
+
+#PREVALENCE AND TAXONOMIC FILTERING
+
+#To continue the analysis we will conduct some taxonomic and
+#prevance filtering:
+
+#Total-frequency-based filtering
+################################
+#To filter samples whose total frequency is an outlier in the distribution of
+# sample frequencies, we know that there is one sample 5x3x12 that has low
+#total frequency compared to the rest of the samples
+
+qiime feature-table filter-samples \
+  --i-table q2_artfcts/filtered/13all-fil-table.qza \
+  --p-min-frequency 30000 \
+  --o-filtered-table q2_artfcts/filtered/samp-freq-fil-table.qza
+
+#This filter can be applied to the feature axis to remove low abundance features
+# from a table. For example, you can remove all features with a total abundance
+#(summed across all samples) of less than 10 as follows.
+
+qiime feature-table filter-features \
+  --i-table q2_artfcts/filtered/samp-freq-fil-table.qza \
+  --p-min-frequency 10 \
+  --o-filtered-table q2_artfcts/filtered/feat-freq-fil-table.qza
+
+#Contingency-based filtering
+################################
+
+qiime feature-table filter-features \
+  --i-table q2_artfcts/filtered/feat-freq-fil-table.qza \
+  --p-min-samples 2 \
+  --o-filtered-table q2_artfcts/filtered/samp-cont-fil-table.qza
+
+#Similarly, samples that contain only a few features could be filtered from a
+#feature table as follows, but this does not apply to our analysis
+#qiime feature-table filter-samples \
+ # --i-table table.qza \
+ # --p-min-features 10 \
+ # --o-filtered-table feature-contingency-filtered-table.qza
+
+#Taxonomy-based filtering
+################################
+#We want to exclude taxonomic groups that are unclassified, or usually not
+#included in bacterial metagenomic analysis
+
+qiime taxa filter-table \
+  --i-table q2_artfcts/filtered/samp-cont-fil-table.qza \
+  --i-taxonomy unfil-core-metrics-results/13-all-taxonomy.qza \
+  --p-include p__ \
+  --p-exclude mitochondria,chloroplast \
+  --o-filtered-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza
+
+#Before continuing with the analysis we will filter the representative  sequences
+#files to match the table we will work with.
+
+qiime feature-table filter-seqs \
+    --i-data q2_artfcts/filtered/13all-fil-rep-seqs.qza \
+    --i-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza \
+    --o-filtered-data q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast-rep-seqs.qza
+
+########## SUMMARIZE THE NEW FILTERED TABLE ###########
+
+## After finishing all the filtering process we can summarize the table
+qiime feature-table summarize --i-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza \
+ --o-visualization q2_vis/fil-table-wphyla-nomitochondria-nochloroplast.qzv --m-sample-metadata-file metadata/metadata_all_categorical.tsv
+
+########## CREATE A NEW TAXONOMY ###############
+
+qiime phylogeny align-to-tree-mafft-fasttree \
+--i-sequences q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast-rep-seqs.qza  \
+--o-alignment q2_artfcts/filtered/fil-aligned-rep-seqs.qza   \
+--o-masked-alignment q2_artfcts/filtered/fil-masked-aligned-rep-seqs.qza  \
+--o-tree q2_artfcts/filtered/fil-unrooted-tree.qza   \
+--o-rooted-tree q2_artfcts/filtered/fil-rooted-tree.qza
+
+########## 1. CALCULATE CORE DISTANCE METRICS ##############
+
+##After finalizing all filtering
+    qiime diversity core-metrics-phylogenetic \
+        --i-phylogeny q2_artfcts/filtered/fil-rooted-tree.qza \
+        --i-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza \
+        --p-sampling-depth 30000 \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --output-dir fil-core-metrics-results
+
+########### 2. CHECKING ALPHA DIVERSITY ##############
+
+##Filtered data set alpha diversity group signficance
+      qiime diversity alpha-group-significance \
+        --i-alpha-diversity fil-core-metrics-results/faith_pd_vector.qza \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --o-visualization fil-core-metrics-results/alpha-div/faith-pd-group-significance.qzv
+
+      qiime diversity alpha-group-significance \
+        --i-alpha-diversity fil-core-metrics-results/shannon_vector.qza \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --o-visualization fil-core-metrics-results/alpha-div/shannon-group-significance.qzv
+
+      qiime diversity alpha-group-significance \
+        --i-alpha-diversity fil-core-metrics-results/evenness_vector.qza \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --o-visualization fil-core-metrics-results/alpha-div/evenness-group-significance.qzv
+
+      qiime diversity alpha-group-significance \
+        --i-alpha-diversity fil-core-metrics-results/observed_features_vector.qza \
+        --m-metadata-file metadata/metadata_all_categorical.tsv \
+        --o-visualization fil-core-metrics-results/alpha-div/observed-features-group-significance.qzv
+
+########## 3. BETA DIVERSITY TESTING #################
+
+######BRAY CURTIS
+    qiime diversity beta-group-significance \
+      --i-distance-matrix fil-core-metrics-results/bray_curtis_distance_matrix.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --m-metadata-column cat_zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-zttime-significance.qzv \
+      --p-pairwise
+
+  qiime diversity beta-group-significance \
+    --i-distance-matrix fil-core-metrics-results/bray_curtis_distance_matrix.qza \
+    --m-metadata-file metadata/metadata_all_categorical.tsv \
+    --m-metadata-column sex_name \
+    --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-sex-significance.qzv \
+    --p-pairwise
+
+    qiime diversity beta-group-significance \
+      --i-distance-matrix fil-core-metrics-results/bray_curtis_distance_matrix.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --m-metadata-column diet_group \
+      --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-diet-significance.qzv \
+      --p-pairwise
+
+######UNWHEIGHTED UNIFRAC
+    qiime diversity beta-group-significance \
+      --i-distance-matrix fil-core-metrics-results/bray_curtis_distance_matrix.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --m-metadata-column cat_zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-zttime-significance.qzv \
+      --p-pairwise
+
+  qiime diversity beta-group-significance \
+    --i-distance-matrix fil-core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+    --m-metadata-file metadata/metadata_all_categorical.tsv \
+    --m-metadata-column sex_name \
+    --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-sex-significance.qzv \
+    --p-pairwise
+
+    qiime diversity beta-group-significance \
+      --i-distance-matrix fil-core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --m-metadata-column diet_group \
+      --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-diet-significance.qzv \
+      --p-pairwise
+
+
+
+########## 4. GENERATE VISUA FOR ALPHA RAREFACTION ################
+
+qiime diversity alpha-rarefaction \
+  --i-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza \
+  --i-phylogeny q2_artfcts/filtered/fil-rooted-tree.qza \
+  --p-max-depth 30000 \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --o-visualization fil-core-metrics-results/alpha-div/alpha-rarefaction.qzv
+
+######### 5. GENERATE VISUALIZATIONS IN EMPEROR PLOTS FOR BETA DIVERSITY ######
+
+#These emperor plot command generates longitudinal plots for beta diversity in
+#our case we will be able to visualize the different 2D maps of the samples over
+#zt_time
+
+qiime emperor plot \
+      --i-pcoa fil-core-metrics-results/unweighted_unifrac_pcoa_results.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --p-custom-axes zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/unweighted-unifrac-emperor-zttime.qzv
+
+qiime emperor plot \
+      --i-pcoa fil-core-metrics-results/weighted_unifrac_pcoa_results.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --p-custom-axes zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/weighted-unifrac-emperor-zttime.qzv
+
+qiime emperor plot \
+      --i-pcoa fil-core-metrics-results/bray_curtis_pcoa_results.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --p-custom-axes zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/bray-curtis-emperor-zttime.qzv
+
+qiime emperor plot \
+      --i-pcoa fil-core-metrics-results/jaccard_pcoa_results.qza \
+      --m-metadata-file metadata/metadata_all_categorical.tsv \
+      --p-custom-axes zt_time \
+      --o-visualization fil-core-metrics-results/beta-div/jaccard-emperor-zttime.qzv
+
+######### 6. GENERATE TAXONOMY PLOTS ############
+
+###first download the classifier
+#curl -sL \
+#  "https://data.qiime2.org/2020.6/common/gg-13-8-99-515-806-nb-classifier.qza" > \
+#  "gg-13-8-99-515-806-nb-classifier.qza"
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza \
+  --i-reads q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast-rep-seqs.qza \
+  --o-classification fil-core-metrics-results/fil-table-wphyla-nomitochondria-nochloroplast-taxonomy.qza
+
+###view the taxonomic composition of our samples with interactive bar plots
+
+qiime taxa barplot \
+  --i-table q2_artfcts/filtered/fil-table-wphyla-nomitochondria-nochloroplast.qza \
+  --i-taxonomy fil-core-metrics-results/fil-table-wphyla-nomitochondria-nochloroplast-taxonomy.qza \
+  --m-metadata-file metadata/metadata_all_categorical.tsv \
+  --o-visualization fil-core-metrics-results/taxonomic-comp/fil-taxa-bar-plots.qzv
+
+#******************************************************************************
+#******************************************************************************
